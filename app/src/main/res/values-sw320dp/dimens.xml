@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 工具栏高度 -->
+    <dimen name="toolbar_height">48dp</dimen>
+
+    <!-- 边距 -->
+    <dimen name="margin_small">4dp</dimen>
+    <dimen name="margin_medium">8dp</dimen>
+    <dimen name="padding_small">4dp</dimen>
+    <dimen name="padding_medium">8dp</dimen>
+
+    <!-- 卡片视图 -->
+    <dimen name="card_corner_radius">12dp</dimen>
+    <dimen name="card_elevation">2dp</dimen>
+
+    <!-- 按钮 -->
+    <dimen name="button_height">36dp</dimen>
+
+    <!-- 文字大小 -->
+    <dimen name="text_size_subtitle">14sp</dimen>
+    <dimen name="text_size_body">12sp</dimen>
+    <dimen name="text_size_button">14sp</dimen>
+</resources>

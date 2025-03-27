@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">自动滑动器</string>
+    <string name="accessibility_service_description">自动滑动器需要无障碍服务权限来执行屏幕滑动操作</string>
+    <string name="hello_world">hello world</string>
+    <string name="start">开始</string>
+    <string name="close">关闭</string>
+    <string name="help">帮助</string>
+    <string name="menu">菜单</string>
+    <string name="more">更多</string>
+    <string name="pause_time">停顿时间（秒）: </string>
+    <!--权限提示相关字符串-->
+    <string name="permission_required">需要权限</string>
+    <string name="permission_dialog_title">需要开启权限</string>
+    <string name="accessibility_permission_message">自动滑动器需要无障碍服务权限才能正常工作</string>
+    <string name="overlay_permission_message">自动滑动器需要悬浮窗权限才能显示控制面板</string>
+    <string name="go_to_settings">去开启</string>
+    <string name="cancel">取消</string>
+</resources>

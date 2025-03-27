@@ -1,0 +1,6 @@
+<resources>
+
+    <style name="Base.Theme.AutoSlide" parent="Theme.Material3.DayNight.NoActionBar" />
+
+    <style name="Theme.AutoSlide" parent="Base.Theme.AutoSlide" />
+</resources>
