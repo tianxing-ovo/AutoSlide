@@ -7,14 +7,14 @@ android {
     // 命名空间
     namespace = "com.ltx"
     // 编译时使用的Android SDK版本
-    compileSdk = 34
+    compileSdk = 36
     defaultConfig {
         // 应用ID: 包名
         applicationId = "com.ltx"
         // 最低支持SDK版本
         minSdk = 34
         // 目标设备的SDK版本
-        targetSdk = 35
+        targetSdk = 36
         // 版本号
         versionCode = 1
         // 版本名称
