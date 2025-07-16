@@ -23,6 +23,7 @@ import com.ltx.service.FloatingWindowService;
 public class MainActivity extends AppCompatActivity {
 
 	private ActivityMainBinding binding;
+	private SharedPreferences prefs;
 
 	/**
 	 * 活动创建时调用
@@ -36,6 +37,10 @@ public class MainActivity extends AppCompatActivity {
 		binding = ActivityMainBinding.inflate(getLayoutInflater());
 		// 设置布局
 		setContentView(binding.getRoot());
+		// 初始化SharedPreferences
+		prefs = getSharedPreferences("slide_settings", MODE_PRIVATE);
+		// 恢复设置
+		restoreSettings();
 		// 设置停顿时间
 		setPauseTime();
 		// 设置滑动速度
@@ -57,28 +62,53 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	/**
+	 * 恢复用户设置到UI
+	 */
+	private void restoreSettings() {
+		int speed = prefs.getInt("speed", 50);
+		boolean needPause = prefs.getBoolean("needPause", false);
+		int pauseTime = prefs.getInt("pauseTime", 1);
+		binding.speedSeekBar.setProgress(speed);
+		binding.pauseSwitch.setChecked(needPause);
+		binding.pauseTimeSeekBar.setProgress(pauseTime);
+		binding.pauseTimeValueText.setText(String.valueOf(pauseTime));
+		binding.pauseTimeLayout.setVisibility(needPause ? View.VISIBLE : View.GONE);
+	}
+
+	/**
 	 * 设置停顿时间
 	 */
 	private void setPauseTime() {
 		binding.pauseSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
 			// 根据开关状态控制停顿时间布局的显示和隐藏
 			binding.pauseTimeLayout.setVisibility(isChecked ? View.VISIBLE : View.GONE);
-			// 设置停顿时间滑动条的监听
-			binding.pauseTimeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-				@Override
-				public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-					// 更新显示的停顿时间值
-					binding.pauseTimeValueText.setText(String.valueOf(progress));
-				}
+			// 保存"是否需要停顿"设置
+			prefs.edit().putBoolean("needPause", isChecked).apply();
+		});
+		// 设置停顿时间滑动条的监听
+		binding.pauseTimeSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			/**
+			 * 当滑动条的进度变化时调用
+			 *
+			 * @param seekBar 滑动条
+			 * @param progress 当前进度
+			 * @param fromUser 是否是用户操作
+			 */
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				// 更新显示的停顿时间值
+				binding.pauseTimeValueText.setText(String.valueOf(progress));
+				// 保存"停顿时间"设置
+				prefs.edit().putInt("pauseTime", progress).apply();
+			}
 
-				@Override
-				public void onStartTrackingTouch(SeekBar seekBar) {
-				}
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar) {
+			}
 
-				@Override
-				public void onStopTrackingTouch(SeekBar seekBar) {
-				}
-			});
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar) {
+			}
 		});
 	}
 
@@ -88,17 +118,30 @@ public class MainActivity extends AppCompatActivity {
 	private void setSlideSpeed() {
 		// 设置速度滑动条的监听
 		binding.speedSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			/**
+			 * 当滑动条的进度变化时调用
+			 *
+			 * @param seekBar 滑动条
+			 * @param progress 当前进度
+			 * @param fromUser 是否是用户操作
+			 */
 			@Override
 			public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+				// 保存"滑动速度"设置
+				prefs.edit().putInt("speed", progress).apply();
 			}
 
 			@Override
 			public void onStartTrackingTouch(SeekBar seekBar) {
 			}
 
+			/**
+			 * 停止拖动滑动条时更新服务中的滑动速度
+			 *
+			 * @param seekBar 滑动条
+			 */
 			@Override
 			public void onStopTrackingTouch(SeekBar seekBar) {
-				// 停止拖动时的处理
 				if (isAccessibilityEnabled()) {
 					// 获取当前速度值
 					int speed = seekBar.getProgress();
@@ -126,6 +169,8 @@ public class MainActivity extends AppCompatActivity {
 
 	/**
 	 * 检查无障碍服务是否开启
+	 *
+	 * @return 开启-true 未开启-false
 	 */
 	private boolean isAccessibilityEnabled() {
 		int accessibilityEnabled;
@@ -161,8 +206,6 @@ public class MainActivity extends AppCompatActivity {
 				}).setNegativeButton(R.string.cancel, null).show();
 				return;
 			}
-			// 保存设置
-			saveSettings();
 			// 启动悬浮窗服务
 			Intent floatingIntent = new Intent(this, FloatingWindowService.class);
 			startService(floatingIntent);
@@ -170,16 +213,4 @@ public class MainActivity extends AppCompatActivity {
 			moveTaskToBack(true);
 		});
 	}
-
-	/**
-	 * 保存设置
-	 */
-	private void saveSettings() {
-		SharedPreferences.Editor editor = getSharedPreferences("slide_settings", MODE_PRIVATE).edit();
-		editor.putInt("speed", binding.speedSeekBar.getProgress());
-		editor.putBoolean("needPause", binding.pauseSwitch.isChecked());
-		editor.putInt("pauseTime", binding.pauseTimeSeekBar.getProgress());
-		editor.apply();
-	}
 }
-
