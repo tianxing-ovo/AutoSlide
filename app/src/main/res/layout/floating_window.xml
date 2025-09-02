@@ -73,6 +73,18 @@
         tools:ignore="HardcodedText,ImageContrastCheck" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/floating_setting_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="4dp"
+        android:contentDescription="设置"
+        android:src="@android:drawable/ic_menu_preferences"
+        app:backgroundTint="#4CAF50"
+        app:fabSize="mini"
+        tools:ignore="ContentDescription,HardcodedText,ImageContrastCheck" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/floating_close_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

@@ -14,6 +14,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 
+import com.ltx.MainActivity;
 import com.ltx.R;
 
 /**
@@ -121,6 +122,18 @@ public class FloatingWindowService extends Service {
 			if (service != null) {
 				service.stopSlide();
 			}
+		});
+		view.findViewById(R.id.floating_setting_button).setOnClickListener(v -> {
+			// 返回主界面
+			Intent intent = new Intent(this, MainActivity.class);
+			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+			startActivity(intent);
+			// 停止滑动服务并关闭悬浮窗
+			AutoSlideService service = AutoSlideService.getInstance();
+			if (service != null) {
+				service.stopSlide();
+			}
+			stopSelf();
 		});
 		view.findViewById(R.id.floating_close_button).setOnClickListener(v -> {
 			AutoSlideService service = AutoSlideService.getInstance();
