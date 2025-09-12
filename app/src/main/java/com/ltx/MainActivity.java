@@ -158,13 +158,28 @@ public class MainActivity extends AppCompatActivity {
 	 * 设置无障碍权限
 	 */
 	private void setAccessibilityPermission() {
-		binding.accessibilityPermissionSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-			if (isChecked) {
-				// 跳转到无障碍设置页面
-				Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
-				startActivity(intent);
+		binding.accessibilityPermissionSwitch.setOnClickListener(v -> {
+			if (binding.accessibilityPermissionSwitch.isChecked()) {
+				navigateToAppAccessibilitySettings();
+			} else {
+				if (isAccessibilityEnabled()) {
+					// 关闭时提示用户前往系统设置禁用无障碍服务
+					new AlertDialog.Builder(this).setTitle(R.string.permission_required).setMessage(R.string.accessibility_disable_message).setPositiveButton(R.string.go_to_close, (dialog, which) -> navigateToAppAccessibilitySettings()).setNegativeButton(R.string.cancel, (dialog, which) -> binding.accessibilityPermissionSwitch.setChecked(true)).show();
+				}
 			}
 		});
+	}
+
+	/**
+	 * 导航到当前应用的无障碍服务设置页面
+	 */
+	private void navigateToAppAccessibilitySettings() {
+		Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		String serviceName = getPackageName() + "/" + AutoSlideService.class.getCanonicalName();
+		intent.putExtra(":settings:fragment_args_key", serviceName);
+		intent.putExtra(":settings:show_fragment_args", intent.getExtras());
+		startActivity(intent);
 	}
 
 	/**
@@ -192,15 +207,12 @@ public class MainActivity extends AppCompatActivity {
 		binding.startButton.setOnClickListener(v -> {
 			// 检查无障碍服务权限
 			if (!isAccessibilityEnabled()) {
-				new AlertDialog.Builder(this).setTitle(R.string.permission_required).setMessage(R.string.accessibility_permission_message).setPositiveButton(R.string.go_to_settings, (dialog, which) -> {
-					Intent intent = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
-					startActivity(intent);
-				}).setNegativeButton(R.string.cancel, null).show();
+				new AlertDialog.Builder(this).setTitle(R.string.permission_required).setMessage(R.string.accessibility_permission_message).setPositiveButton(R.string.go_to_open, (dialog, which) -> navigateToAppAccessibilitySettings()).setNegativeButton(R.string.cancel, null).show();
 				return;
 			}
 			// 检查悬浮窗权限
 			if (!Settings.canDrawOverlays(this)) {
-				new AlertDialog.Builder(this).setTitle(R.string.permission_required).setMessage("需要开启悬浮窗权限").setPositiveButton(R.string.go_to_settings, (dialog, which) -> {
+				new AlertDialog.Builder(this).setTitle(R.string.permission_required).setMessage("需要开启悬浮窗权限").setPositiveButton(R.string.go_to_open, (dialog, which) -> {
 					Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
 					startActivity(intent);
 				}).setNegativeButton(R.string.cancel, null).show();
