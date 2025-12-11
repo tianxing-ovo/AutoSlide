@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.api.BaseVariantOutputImpl
+
 // AGP
 plugins {
     alias(libs.plugins.android.application)
@@ -28,6 +30,13 @@ android {
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
+        }
+    }
+    // 自定义APK输出名称
+    applicationVariants.all {
+        outputs.all {
+            (this as BaseVariantOutputImpl).outputFileName =
+                "AutoSlide-v${defaultConfig.versionName}.apk"
         }
     }
     compileOptions {
