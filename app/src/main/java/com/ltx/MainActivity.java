@@ -1,12 +1,23 @@
 package com.ltx;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.view.View;
+import android.widget.LinearLayout;
 import android.widget.SeekBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -57,6 +68,11 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		// 如果有永久授权且无障碍服务未开启
+		if (hasSecureSettingsPermission() && !isAccessibilityEnabled()) {
+			// 自动开启无障碍服务
+			changeAccessibilityServiceState(true);
+		}
 		// 检查无障碍服务状态并更新无障碍服务权限开关
 		binding.accessibilityPermissionSwitch.setChecked(isAccessibilityEnabled());
 	}
@@ -159,15 +175,136 @@ public class MainActivity extends AppCompatActivity {
 	 */
 	private void setAccessibilityPermission() {
 		binding.accessibilityPermissionSwitch.setOnClickListener(v -> {
+			// 开关被打开
 			if (binding.accessibilityPermissionSwitch.isChecked()) {
-				navigateToAppAccessibilitySettings();
+				if (hasSecureSettingsPermission()) {
+					// 有永久授权则直接开启无障碍服务
+					changeAccessibilityServiceState(true);
+					Toast.makeText(this, "无障碍服务已开启", Toast.LENGTH_SHORT).show();
+				} else {
+					// 显示开启方式选择对话框
+					showAccessibilityOptionDialog();
+				}
 			} else {
 				if (isAccessibilityEnabled()) {
-					// 关闭时提示用户前往系统设置禁用无障碍服务
-					new AlertDialog.Builder(this).setTitle(R.string.permission_required).setMessage(R.string.accessibility_disable_message).setPositiveButton(R.string.go_to_close, (dialog, which) -> navigateToAppAccessibilitySettings()).setNegativeButton(R.string.cancel, (dialog, which) -> binding.accessibilityPermissionSwitch.setChecked(true)).show();
+					if (hasSecureSettingsPermission()) {
+						// 有永久授权则直接关闭无障碍服务
+						changeAccessibilityServiceState(false);
+					} else {
+						// 无永久授权则提示用户手动关闭无障碍服务
+						new AlertDialog.Builder(this).setTitle(R.string.permission_required).setMessage(R.string.accessibility_disable_message).setPositiveButton(R.string.go_to_close, (dialog, which) -> navigateToAppAccessibilitySettings()).setNegativeButton(R.string.cancel, (dialog, which) -> binding.accessibilityPermissionSwitch.setChecked(true)).show();
+					}
 				}
 			}
 		});
+	}
+
+	/**
+	 * 显示开启方式选择对话框
+	 */
+	private void showAccessibilityOptionDialog() {
+		String[] options = {"手动开启", "永久授权"};
+		new AlertDialog.Builder(this).setTitle("选择开启方式").setItems(options, (dialog, which) -> {
+			if (which == 0) {
+				// 手动开启无障碍服务
+				navigateToAppAccessibilitySettings();
+			} else {
+				// 提示用户执行ADB命令
+				showAdbCommandDialog();
+				// 恢复开关状态
+				binding.accessibilityPermissionSwitch.setChecked(false);
+			}
+		}).setOnCancelListener(dialog -> binding.accessibilityPermissionSwitch.setChecked(false)).show();
+	}
+
+	/**
+	 * 检查是否有写入安全设置权限
+	 *
+	 * @return true-有权限 false-无权限
+	 */
+	private boolean hasSecureSettingsPermission() {
+		return checkCallingOrSelfPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED;
+	}
+
+	/**
+	 * 改变无障碍服务状态
+	 *
+	 * @param enable true-开启 false-关闭
+	 */
+	private void changeAccessibilityServiceState(boolean enable) {
+		String serviceName = getPackageName() + "/" + AutoSlideService.class.getCanonicalName();
+		String enabledServices = Settings.Secure.getString(getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+		if (enable) {
+			if (TextUtils.isEmpty(enabledServices)) {
+				enabledServices = serviceName;
+			} else if (!enabledServices.contains(serviceName)) {
+				enabledServices += ":" + serviceName;
+			}
+			Settings.Secure.putString(getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, enabledServices);
+			Settings.Secure.putInt(getContentResolver(), Settings.Secure.ACCESSIBILITY_ENABLED, 1);
+		} else {
+			if (!TextUtils.isEmpty(enabledServices)) {
+				StringBuilder newServices = new StringBuilder();
+				for (String service : enabledServices.split(":")) {
+					if (!service.equals(serviceName)) {
+						if (newServices.length() > 0) {
+							newServices.append(":");
+						}
+						newServices.append(service);
+					}
+				}
+				Settings.Secure.putString(getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, newServices.toString());
+			}
+		}
+		// 更新UI状态
+		binding.accessibilityPermissionSwitch.setChecked(isAccessibilityEnabled());
+	}
+
+	/**
+	 * 显示ADB命令说明
+	 */
+	@SuppressLint("SetTextI18n")
+	private void showAdbCommandDialog() {
+		String command = "adb shell pm grant " + getPackageName() + " android.permission.WRITE_SECURE_SETTINGS";
+		// 创建自定义布局
+		LinearLayout layout = new LinearLayout(this);
+		layout.setOrientation(LinearLayout.VERTICAL);
+		int padding = (int) (24 * getResources().getDisplayMetrics().density);
+		layout.setPadding(padding, padding / 2, padding, padding / 2);
+		TextView message = new TextView(this);
+		message.setText("请连接电脑并在终端运行以下ADB命令");
+		message.setTextSize(16);
+		message.setTextColor(Color.parseColor("#1f1f1f"));
+		layout.addView(message);
+		// 添加代码块
+		TextView codeBlock = new TextView(this);
+		codeBlock.setText(command);
+		codeBlock.setTypeface(Typeface.MONOSPACE);
+		codeBlock.setBackgroundColor(Color.parseColor("#F5F5F5"));
+		int codePadding = (int) (12 * getResources().getDisplayMetrics().density);
+		codeBlock.setPadding(codePadding, codePadding, codePadding, codePadding);
+		codeBlock.setTextSize(13);
+		codeBlock.setTextColor(Color.parseColor("#333333"));
+		codeBlock.setTextIsSelectable(true);
+		LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+		params.setMargins(0, (int) (16 * getResources().getDisplayMetrics().density), 0, 0);
+		codeBlock.setLayoutParams(params);
+		layout.addView(codeBlock);
+		new AlertDialog.Builder(this).setTitle("获取永久授权").setView(layout).setPositiveButton("复制命令", (dialog, which) -> {
+			copyToClipboard(command);
+			Toast.makeText(this, "命令已复制到剪贴板", Toast.LENGTH_SHORT).show();
+		}).setNegativeButton("取消", null).show();
+	}
+
+	/**
+	 * 复制内容到剪贴板
+	 *
+	 * @param text 要复制的内容
+	 */
+	private void copyToClipboard(String text) {
+		ClipboardManager clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+		ClipData clipData = ClipData.newPlainText("ADB Command", text);
+		clipboardManager.setPrimaryClip(clipData);
 	}
 
 	/**
@@ -205,10 +342,17 @@ public class MainActivity extends AppCompatActivity {
 
 	private void start() {
 		binding.startButton.setOnClickListener(v -> {
-			// 检查无障碍服务权限
+			// 如果无障碍服务未开启
 			if (!isAccessibilityEnabled()) {
-				new AlertDialog.Builder(this).setTitle(R.string.permission_required).setMessage(R.string.accessibility_permission_message).setPositiveButton(R.string.go_to_open, (dialog, which) -> navigateToAppAccessibilitySettings()).setNegativeButton(R.string.cancel, null).show();
-				return;
+				if (hasSecureSettingsPermission()) {
+					// 有永久授权则自动开启无障碍服务
+					changeAccessibilityServiceState(true);
+					Toast.makeText(this, "已自动开启无障碍服务", Toast.LENGTH_SHORT).show();
+				} else {
+					// 提示用户开启无障碍服务
+					new AlertDialog.Builder(this).setTitle(R.string.permission_required).setMessage(R.string.accessibility_permission_message).setPositiveButton(R.string.go_to_open, (dialog, which) -> showAccessibilityOptionDialog()).setNegativeButton(R.string.cancel, null).show();
+					return;
+				}
 			}
 			// 检查悬浮窗权限
 			if (!Settings.canDrawOverlays(this)) {
