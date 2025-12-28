@@ -1,7 +1,7 @@
 # 安卓自动滑动器APP [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-1.2-green)]()
+[![Version](https://img.shields.io/badge/Version-1.3-green)]()
 
 一款简洁高效的安卓设备自动滑动解决方案，适用于自动化测试、内容浏览等场景
 
@@ -10,6 +10,7 @@
 - **定时滑动**：用户可自定义滑动的时间间隔
 - **滑动速度**：支持多种滑动速度设置，满足不同需求
 - **滑动方向**：支持上、下、左、右四个方向的滑动
+- **悬浮窗控制**：便捷的悬浮球控制，滑动开始后自动收缩为小图标，点击小图标即可展开面板并自动停止滑动
 - **手势模拟**：精准模拟手指滑动手势，确保与真实用户操作无异
 - **智能权限管理**：支持“永久授权”模式（通过ADB），应用启动时自动激活无障碍服务，操作更便捷
 - **简单易用**：直观的用户界面，轻松设置滑动参数

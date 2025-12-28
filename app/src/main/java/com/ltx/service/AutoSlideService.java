@@ -3,6 +3,7 @@ package com.ltx.service;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Path;
 import android.os.Handler;
@@ -14,6 +15,7 @@ import android.view.accessibility.AccessibilityEvent;
  *
  * @author tianxing
  */
+@SuppressLint("AccessibilityPolicy")
 public class AutoSlideService extends AccessibilityService {
 	private static AutoSlideService instance;
 	private final Handler handler = new Handler(Looper.getMainLooper());

@@ -8,90 +8,100 @@
     android:orientation="vertical"
     android:padding="8dp">
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/floating_up_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_margin="4dp"
-        android:contentDescription="向上滑动"
-        android:src="@android:drawable/arrow_up_float"
-        app:backgroundTint="#4CAF50"
-        app:fabSize="mini"
-        tools:ignore="HardcodedText,ImageContrastCheck" />
-
     <LinearLayout
+        android:id="@+id/control_panel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/floating_left_button"
+            android:id="@+id/floating_up_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:layout_margin="4dp"
-            android:contentDescription="向左滑动"
-            android:src="@android:drawable/ic_media_previous"
+            android:contentDescription="向上滑动"
+            android:src="@android:drawable/arrow_up_float"
             app:backgroundTint="#4CAF50"
             app:fabSize="mini"
-            tools:ignore="ContentDescription,HardcodedText,ImageContrastCheck" />
+            tools:ignore="HardcodedText,ImageContrastCheck" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/floating_stop_button"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="horizontal">
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/floating_left_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:contentDescription="向左滑动"
+                android:src="@android:drawable/ic_media_previous"
+                app:backgroundTint="#4CAF50"
+                app:fabSize="mini"
+                tools:ignore="ContentDescription,HardcodedText,ImageContrastCheck" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/floating_setting_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="4dp"
+                android:contentDescription="设置"
+                android:src="@android:drawable/ic_menu_preferences"
+                app:backgroundTint="#4CAF50"
+                app:fabSize="mini"
+                tools:ignore="ContentDescription,HardcodedText,ImageContrastCheck" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/floating_right_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:contentDescription="向右滑动"
+                android:src="@android:drawable/ic_media_next"
+                app:backgroundTint="#4CAF50"
+                app:fabSize="mini"
+                tools:ignore="ContentDescription,HardcodedText,ImageContrastCheck" />
+        </LinearLayout>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/floating_down_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:layout_margin="4dp"
-            android:contentDescription="停止"
-            android:src="@android:drawable/ic_media_pause"
+            android:contentDescription="向下滑动"
+            android:src="@android:drawable/arrow_down_float"
             app:backgroundTint="#4CAF50"
             app:fabSize="mini"
             tools:ignore="HardcodedText,ImageContrastCheck" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/floating_right_button"
+            android:id="@+id/floating_close_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
             android:layout_margin="4dp"
-            android:contentDescription="向右滑动"
-            android:src="@android:drawable/ic_media_next"
+            android:contentDescription="关闭"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
             app:backgroundTint="#4CAF50"
             app:fabSize="mini"
             tools:ignore="ContentDescription,HardcodedText,ImageContrastCheck" />
+
     </LinearLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/floating_down_button"
+        android:id="@+id/floating_expand_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_margin="4dp"
-        android:contentDescription="向下滑动"
-        android:src="@android:drawable/arrow_down_float"
-        app:backgroundTint="#4CAF50"
-        app:fabSize="mini"
-        tools:ignore="HardcodedText,ImageContrastCheck" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/floating_setting_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_margin="4dp"
-        android:contentDescription="设置"
-        android:src="@android:drawable/ic_menu_preferences"
-        app:backgroundTint="#4CAF50"
-        app:fabSize="mini"
-        tools:ignore="ContentDescription,HardcodedText,ImageContrastCheck" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/floating_close_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_margin="4dp"
-        android:contentDescription="关闭"
-        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:contentDescription="展开"
+        android:src="@android:drawable/ic_input_add"
+        android:visibility="gone"
         app:backgroundTint="#4CAF50"
         app:fabSize="mini"
         tools:ignore="ContentDescription,HardcodedText,ImageContrastCheck" />
