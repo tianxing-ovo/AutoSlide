@@ -3,6 +3,8 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Version](https://img.shields.io/badge/Version-1.3-green)]()
 
+[简体中文](README.md) | [English](README.en.md)
+
 一款简洁高效的安卓设备自动滑动解决方案，适用于自动化测试、内容浏览等场景
 
 ## 功能特性
