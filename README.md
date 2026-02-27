@@ -1,7 +1,7 @@
 # 安卓自动滑动器APP [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-1.3-green)]()
+[![Version](https://img.shields.io/badge/Version-1.4-green)]()
 
 [简体中文](README.md) | [English](README.en.md)
 
@@ -40,4 +40,4 @@ requests等
 
 ## 许可证
 
-本项目基于Apache License 2.0许可证
+本项目基于 Apache License 2.0 许可证，详见 [LICENSE](LICENSE) 文件

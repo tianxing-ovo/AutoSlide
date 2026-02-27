@@ -1,7 +1,7 @@
 # Android Auto-Slide App [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-1.3-green)]()
+[![Version](https://img.shields.io/badge/Version-1.4-green)]()
 
 [简体中文](README.md) | [English](README.en.md)
 
@@ -39,4 +39,4 @@ We welcome all forms of contributions, including but not limited to bug reports,
 
 ## License
 
-This project is licensed under the Apache License 2.0.
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
