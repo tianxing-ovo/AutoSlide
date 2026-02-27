@@ -197,6 +197,18 @@
         app:layout_constraintTop_toBottomOf="@id/controlsLayout"
         tools:ignore="VisualLintButtonSize" />
 
+    <!--检查更新按钮-->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/checkUpdateButton"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/check_update"
+        android:textColor="#9E9E9E"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/startButton" />
+
     <!--底部导航栏-->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigation"

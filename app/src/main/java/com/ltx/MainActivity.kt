@@ -60,6 +60,7 @@ class MainActivity : AppCompatActivity() {
         setupSpeedControl()
         setupAccessibilityToggle()
         setupStartButton()
+        setupUpdateButton()
     }
 
     /**
@@ -390,6 +391,15 @@ class MainActivity : AppCompatActivity() {
             val floatingIntent = Intent(this, FloatingWindowService::class.java)
             startService(floatingIntent)
             moveTaskToBack(true)
+        }
+    }
+
+    /**
+     * 绑定"检查更新"按钮点击事件
+     */
+    private fun setupUpdateButton() {
+        binding.checkUpdateButton.setOnClickListener {
+            UpdateChecker.checkUpdate(this, showToastOnLatest = true)
         }
     }
 
