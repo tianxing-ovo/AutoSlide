@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
+import android.util.Base64
 import androidx.core.net.toUri
 import org.json.JSONObject
 import java.io.BufferedReader
@@ -21,15 +22,16 @@ import java.util.concurrent.Executors
  * @author tianxing
  */
 object UpdateChecker {
-    private const val UPDATE_INFO_URL = "https://raw.githubusercontent.com/tianxing-ovo/AutoSlide/master/update.json"
+    private const val UPDATE_INFO_URL =
+        "https://api.github.com/repos/tianxing-ovo/AutoSlide/contents/update.json?ref=master"
     private val executor = Executors.newSingleThreadExecutor()
     private val mainHandler = Handler(Looper.getMainLooper())
 
     /**
      * 开始检查更新
      *
-     * @param activity 宿主 Activity
-     * @param showToastOnLatest 如果已经是最新版或请求失败，是否弹出吐司提示 (如果是用户主动点击触发的，传 true)
+     * @param activity 活动
+     * @param showToastOnLatest 是否在最新版或请求失败时显示吐司提示
      */
     fun checkUpdate(activity: Activity, showToastOnLatest: Boolean = true) {
         if (showToastOnLatest) {
@@ -43,22 +45,27 @@ object UpdateChecker {
                 connection.requestMethod = "GET"
                 connection.connectTimeout = 5000
                 connection.readTimeout = 5000
+                // 设置User-Agent
+                connection.setRequestProperty("User-Agent", "AutoSlide-App")
                 // 检查响应状态码
                 val responseCode = connection.responseCode
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     val reader = BufferedReader(InputStreamReader(connection.inputStream))
                     val responseStr = reader.readText()
                     reader.close()
-                    // 解析JSON字符串
-                    val jsonObject = JSONObject(responseStr)
+                    // Base64解码content字段
+                    val apiResponse = JSONObject(responseStr)
+                    val encodedContent = apiResponse.optString("content", "").replace("\n", "")
+                    val decodedContent = String(Base64.decode(encodedContent, Base64.DEFAULT))
+                    // 解析实际的update.json
+                    val jsonObject = JSONObject(decodedContent)
                     val remoteVersionCode = jsonObject.optInt("versionCode", 0)
                     val remoteVersionName = jsonObject.optString("versionName", "")
                     val downloadUrl = jsonObject.optString("downloadUrl", "")
                     val updateLog = jsonObject.optString("updateLog", "")
-
                     // 获取本地版本号
                     val localVersionCode = getLocalVersionCode(activity)
-
+                    // 对比版本号并显示对话框
                     mainHandler.post {
                         if (remoteVersionCode > localVersionCode) {
                             showUpdateDialog(activity, remoteVersionName, updateLog, downloadUrl)
@@ -89,9 +96,16 @@ object UpdateChecker {
         }
     }
 
-    private fun showUpdateDialog(
-        activity: Activity, versionName: String, updateLog: String, downloadUrl: String
-    ) {
+    /**
+     * 显示更新对话框
+     *
+     * @param activity 活动
+     * @param versionName 远程版本号
+     * @param updateLog 更新日志
+     * @param downloadUrl 下载链接
+     */
+    private fun showUpdateDialog(activity: Activity, versionName: String, updateLog: String,
+                                 downloadUrl: String) {
         AlertDialog.Builder(activity)
             .setTitle(activity.getString(R.string.update_found_title, versionName))
             .setMessage(updateLog.ifEmpty { activity.getString(R.string.update_found_default_message) })
@@ -108,10 +122,10 @@ object UpdateChecker {
     }
 
     /**
-     * 通过PackageManager获取当前应用的版本号
+     * 获取当前应用的版本号
      *
-     * @param activity 宿主Activity
-     * @return 当前应用的versionCode
+     * @param activity 活动
+     * @return 当前应用的版本号
      */
     private fun getLocalVersionCode(activity: Activity): Long {
         return activity.packageManager.getPackageInfo(
