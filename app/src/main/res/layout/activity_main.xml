@@ -39,10 +39,9 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="必要权限"
+                android:text="@string/title_required_permission"
                 android:textSize="@dimen/text_size_subtitle"
-                android:textStyle="bold"
-                tools:ignore="HardcodedText" />
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -55,9 +54,8 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="绑定无障碍服务"
-                    android:textSize="@dimen/text_size_body"
-                    tools:ignore="HardcodedText" />
+                    android:text="@string/bind_accessibility_service"
+                    android:textSize="@dimen/text_size_body" />
                 <!--无障碍服务权限开关-->
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/accessibilityPermissionSwitch"
@@ -89,10 +87,9 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="滑动设置"
+                android:text="@string/title_slide_settings"
                 android:textSize="@dimen/text_size_subtitle"
-                android:textStyle="bold"
-                tools:ignore="HardcodedText" />
+                android:textStyle="bold" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -105,9 +102,8 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="是否需要停顿"
-                    android:textSize="@dimen/text_size_body"
-                    tools:ignore="HardcodedText" />
+                    android:text="@string/setting_need_pause"
+                    android:textSize="@dimen/text_size_body" />
                 <!--停顿开关-->
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/pauseSwitch"
@@ -138,10 +134,9 @@
                         android:id="@+id/pauseTimeValueText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="1"
+                        tools:text="1"
                         android:textSize="@dimen/text_size_body"
-                        android:textStyle="bold"
-                        tools:ignore="HardcodedText" />
+                        android:textStyle="bold" />
                 </LinearLayout>
                 <!--停顿时间滑动条-->
                 <SeekBar
@@ -158,9 +153,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/margin_small"
-                android:text="滑动速度"
-                android:textSize="@dimen/text_size_body"
-                tools:ignore="HardcodedText" />
+                android:text="@string/setting_slide_speed"
+                android:textSize="@dimen/text_size_body" />
             <!--滑动速度滑动条-->
             <SeekBar
                 android:id="@+id/speedSeekBar"
@@ -200,7 +194,8 @@
         app:cornerRadius="@dimen/card_corner_radius"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/controlsLayout" />
+        app:layout_constraintTop_toBottomOf="@id/controlsLayout"
+        tools:ignore="VisualLintButtonSize" />
 
     <!--底部导航栏-->
     <com.google.android.material.bottomnavigation.BottomNavigationView

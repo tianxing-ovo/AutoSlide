@@ -18,4 +18,26 @@
     <string name="go_to_open">去开启</string>
     <string name="go_to_close">去关闭</string>
     <string name="cancel">取消</string>
+    <string name="accessibility_service_enabled">无障碍服务已开启</string>
+    <string name="accessibility_service_auto_enabled">已自动开启无障碍服务</string>
+    <string name="manual_enable">手动开启</string>
+    <string name="permanent_authorization">永久授权</string>
+    <string name="choose_enable_method">选择开启方式</string>
+    <string name="get_permanent_authorization">获取永久授权</string>
+    <string name="copy_command">复制命令</string>
+    <string name="command_copied">命令已复制到剪贴板</string>
+    <string name="adb_command_instruction">请连接电脑并在终端运行以下ADB命令</string>
+    <string name="overlay_permission_required">需要开启悬浮窗权限</string>
+    <string name="desc_slide_up">向上滑动</string>
+    <string name="desc_slide_down">向下滑动</string>
+    <string name="desc_slide_left">向左滑动</string>
+    <string name="desc_slide_right">向右滑动</string>
+    <string name="desc_settings">设置</string>
+    <string name="desc_close">关闭</string>
+    <string name="desc_expand">展开</string>
+    <string name="title_required_permission">必要权限</string>
+    <string name="bind_accessibility_service">绑定无障碍服务</string>
+    <string name="title_slide_settings">滑动设置</string>
+    <string name="setting_need_pause">是否需要停顿</string>
+    <string name="setting_slide_speed">滑动速度</string>
 </resources>

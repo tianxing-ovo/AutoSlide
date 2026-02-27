@@ -20,11 +20,11 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_margin="4dp"
-            android:contentDescription="向上滑动"
+            android:contentDescription="@string/desc_slide_up"
             android:src="@android:drawable/arrow_up_float"
             app:backgroundTint="#4CAF50"
             app:fabSize="mini"
-            tools:ignore="HardcodedText,ImageContrastCheck" />
+            tools:ignore="ImageContrastCheck,ClassNameCheck" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -37,11 +37,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
-                android:contentDescription="向左滑动"
+                android:contentDescription="@string/desc_slide_left"
                 android:src="@android:drawable/ic_media_previous"
                 app:backgroundTint="#4CAF50"
                 app:fabSize="mini"
-                tools:ignore="ContentDescription,HardcodedText,ImageContrastCheck" />
+                tools:ignore="ImageContrastCheck,ClassNameCheck" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/floating_setting_button"
@@ -49,22 +49,22 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_margin="4dp"
-                android:contentDescription="设置"
+                android:contentDescription="@string/desc_settings"
                 android:src="@android:drawable/ic_menu_preferences"
                 app:backgroundTint="#4CAF50"
                 app:fabSize="mini"
-                tools:ignore="ContentDescription,HardcodedText,ImageContrastCheck" />
+                tools:ignore="ImageContrastCheck,ClassNameCheck" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/floating_right_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp"
-                android:contentDescription="向右滑动"
+                android:contentDescription="@string/desc_slide_right"
                 android:src="@android:drawable/ic_media_next"
                 app:backgroundTint="#4CAF50"
                 app:fabSize="mini"
-                tools:ignore="ContentDescription,HardcodedText,ImageContrastCheck" />
+                tools:ignore="ImageContrastCheck,ClassNameCheck" />
         </LinearLayout>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -73,11 +73,11 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_margin="4dp"
-            android:contentDescription="向下滑动"
+            android:contentDescription="@string/desc_slide_down"
             android:src="@android:drawable/arrow_down_float"
             app:backgroundTint="#4CAF50"
             app:fabSize="mini"
-            tools:ignore="HardcodedText,ImageContrastCheck" />
+            tools:ignore="ImageContrastCheck,ClassNameCheck" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/floating_close_button"
@@ -85,11 +85,11 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_margin="4dp"
-            android:contentDescription="关闭"
+            android:contentDescription="@string/desc_close"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
             app:backgroundTint="#4CAF50"
             app:fabSize="mini"
-            tools:ignore="ContentDescription,HardcodedText,ImageContrastCheck" />
+            tools:ignore="ImageContrastCheck,ClassNameCheck" />
 
     </LinearLayout>
 
@@ -99,11 +99,11 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_margin="4dp"
-        android:contentDescription="展开"
+        android:contentDescription="@string/desc_expand"
         android:src="@android:drawable/ic_input_add"
         android:visibility="gone"
         app:backgroundTint="#4CAF50"
         app:fabSize="mini"
-        tools:ignore="ContentDescription,HardcodedText,ImageContrastCheck" />
+        tools:ignore="ImageContrastCheck" />
 
 </LinearLayout>
