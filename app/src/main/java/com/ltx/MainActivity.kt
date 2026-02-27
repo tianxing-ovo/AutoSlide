@@ -53,6 +53,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        // 设置状态栏图标颜色为深色
+        window.insetsController?.setSystemBarsAppearance(
+            android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+            android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+        )
         // 初始化SharedPreferences用于本地配置存储
         preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         restoreSettings()
@@ -72,6 +77,19 @@ class MainActivity : AppCompatActivity() {
             changeAccessibilityServiceState(enable = true)
         }
         binding.accessibilityPermissionSwitch.isChecked = isAccessibilityEnabled()
+        UpdateChecker.onHostResumed(this)
+    }
+
+    override fun onPostResume() {
+        super.onPostResume()
+        UpdateChecker.onHostResumed(this)
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            UpdateChecker.onHostResumed(this)
+        }
     }
 
     /**

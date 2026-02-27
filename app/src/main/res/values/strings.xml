@@ -48,4 +48,7 @@
     <string name="update_found_default_message">修复了部分已知问题并提升了体验</string>
     <string name="update_now">立即更新</string>
     <string name="invalid_download_url">下载链接无效</string>
+    <string name="downloading_update">正在下载更新</string>
+    <string name="download_failed">下载失败</string>
+    <string name="install_permission_required">需要开启安装未知应用权限</string>
 </resources>

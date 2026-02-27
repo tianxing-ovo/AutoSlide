@@ -4,6 +4,9 @@
     package="com.ltx">
     <!--允许应用访问网络(主要用于检查更新)-->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!--允许安装APK-->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"
+        tools:ignore="RequestInstallPackagesPolicy" />
     <!--添加悬浮窗权限-->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <!--添加写入安全设置权限-->

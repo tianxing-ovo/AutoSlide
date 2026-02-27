@@ -1,6 +1,17 @@
 <resources>
 
-    <style name="Base.Theme.AutoSlide" parent="Theme.Material3.DayNight.NoActionBar" />
+    <style name="Base.Theme.AutoSlide" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- 主色调 - 深紫蓝色 -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary</item>
+        <item name="colorAccent">@color/primary</item>
+        <!-- 背景色 - 浅灰紫色 -->
+        <item name="android:windowBackground">@color/background</item>
+        <item name="colorSurface">@color/surface</item>
+        <!-- 文字默认颜色 -->
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+    </style>
 
     <style name="Theme.AutoSlide" parent="Base.Theme.AutoSlide" />
 </resources>

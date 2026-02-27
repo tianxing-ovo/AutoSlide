@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/gradient_background"
+    android:background="@color/background"
     tools:context=".MainActivity">
 
     <!--顶部工具栏-->
@@ -16,7 +16,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:titleTextColor="@color/white" />
+        app:titleTextColor="@color/text_primary" />
 
     <!--权限设置卡片-->
     <com.google.android.material.card.MaterialCardView
@@ -24,8 +24,10 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/margin_medium"
-        app:cardCornerRadius="@dimen/card_corner_radius"
-        app:cardElevation="@dimen/card_elevation"
+        app:cardBackgroundColor="@color/surface"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar">
@@ -40,6 +42,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/title_required_permission"
+                android:textColor="@color/text_primary"
                 android:textSize="@dimen/text_size_subtitle"
                 android:textStyle="bold" />
 
@@ -55,13 +58,16 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/bind_accessibility_service"
+                    android:textColor="@color/text_secondary"
                     android:textSize="@dimen/text_size_body" />
                 <!--无障碍服务权限开关-->
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/accessibilityPermissionSwitch"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:contentDescription="@string/accessibility_service_permission_switch" />
+                    android:contentDescription="@string/accessibility_service_permission_switch"
+                    app:thumbTint="@color/switch_thumb_color"
+                    app:trackTint="@color/switch_track_color" />
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
@@ -72,8 +78,10 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/margin_medium"
-        app:cardCornerRadius="@dimen/card_corner_radius"
-        app:cardElevation="@dimen/card_elevation"
+        app:cardBackgroundColor="@color/surface"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="0dp"
+        app:strokeWidth="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/permissionCard">
@@ -88,6 +96,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/title_slide_settings"
+                android:textColor="@color/text_primary"
                 android:textSize="@dimen/text_size_subtitle"
                 android:textStyle="bold" />
 
@@ -103,12 +112,15 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/setting_need_pause"
+                    android:textColor="@color/text_secondary"
                     android:textSize="@dimen/text_size_body" />
                 <!--停顿开关-->
                 <com.google.android.material.switchmaterial.SwitchMaterial
                     android:id="@+id/pauseSwitch"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    app:thumbTint="@color/switch_thumb_color"
+                    app:trackTint="@color/switch_track_color" />
             </LinearLayout>
             <!--停顿时间布局-->
             <LinearLayout
@@ -128,12 +140,15 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/pause_time"
+                        android:textColor="@color/text_secondary"
                         android:textSize="@dimen/text_size_body" />
                     <!--停顿时间文本-->
                     <TextView
                         android:id="@+id/pauseTimeValueText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:textColor="@color/primary"
                         tools:text="1"
                         android:textSize="@dimen/text_size_body"
                         android:textStyle="bold" />
@@ -146,7 +161,8 @@
                     android:layout_marginTop="@dimen/margin_small"
                     android:max="10"
                     android:progress="1"
-                    android:progressTint="#E91E63" />
+                    android:progressTint="@color/primary"
+                    android:thumbTint="@color/primary" />
             </LinearLayout>
 
             <TextView
@@ -154,6 +170,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/margin_small"
                 android:text="@string/setting_slide_speed"
+                android:textColor="@color/text_secondary"
                 android:textSize="@dimen/text_size_body" />
             <!--滑动速度滑动条-->
             <SeekBar
@@ -163,7 +180,8 @@
                 android:layout_marginTop="@dimen/margin_small"
                 android:max="100"
                 android:progress="50"
-                android:progressTint="#E91E63" />
+                android:progressTint="@color/primary"
+                android:thumbTint="@color/primary" />
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
@@ -183,15 +201,17 @@
     <!--开始按钮-->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/startButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/margin_medium"
-        android:backgroundTint="#2196F3"
-        android:padding="@dimen/padding_medium"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_marginStart="@dimen/margin_medium"
+        android:layout_marginEnd="@dimen/margin_medium"
+        android:layout_marginTop="@dimen/margin_large"
+        android:backgroundTint="@color/primary"
         android:text="@string/start"
-        android:textColor="@color/white"
+        android:textColor="@color/on_primary"
         android:textSize="@dimen/text_size_button"
-        app:cornerRadius="@dimen/card_corner_radius"
+        app:backgroundTint="@color/primary"
+        app:cornerRadius="32dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/controlsLayout"
@@ -204,7 +224,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/check_update"
-        android:textColor="#9E9E9E"
+        android:textColor="@color/text_secondary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/startButton" />
