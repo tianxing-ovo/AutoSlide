@@ -12,6 +12,7 @@ import android.graphics.Typeface
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
+import android.view.WindowInsetsController
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
@@ -55,8 +56,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         // 设置状态栏图标颜色为深色
         window.insetsController?.setSystemBarsAppearance(
-            android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
-            android.view.WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
         )
         // 初始化SharedPreferences用于本地配置存储
         preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)

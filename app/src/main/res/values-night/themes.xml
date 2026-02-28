@@ -1,4 +1,8 @@
 <resources>
 
-    <style name="Base.Theme.AutoSlide" parent="Theme.Material3.DayNight.NoActionBar" />
+    <style name="Base.Theme.AutoSlide" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:statusBarColor">@color/white</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:enforceStatusBarContrast">false</item>
+    </style>
 </resources>
