@@ -3,12 +3,10 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="blue">#126ABC</color>
-
-    <!--配色规范-->
     <color name="primary">#545995</color>
     <color name="on_primary">#FFFFFF</color>
     <color name="primary_light">#E2E2F5</color>
-    <color name="background">#F8F8FC</color>
+    <color name="background">#FFFFFF</color>
     <color name="surface">#EFEFF6</color>
     <color name="text_primary">#000000</color>
     <color name="text_secondary">#000000</color>

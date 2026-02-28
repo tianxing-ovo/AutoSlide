@@ -1,14 +1,17 @@
 <resources>
 
-    <style name="Base.Theme.AutoSlide" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Base.Theme.AutoSlide" parent="Theme.Material3.Light.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary</item>
         <item name="colorAccent">@color/primary</item>
+        <item name="android:windowBackground">@color/white</item>
+        <item name="colorSurface">@color/white</item>
         <item name="android:statusBarColor">@color/white</item>
+        <item name="android:navigationBarColor">@color/white</item>
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
         <item name="android:enforceStatusBarContrast">false</item>
-        <item name="android:windowBackground">@color/background</item>
-        <item name="colorSurface">@color/surface</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
     </style>

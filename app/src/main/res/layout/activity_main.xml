@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
+    android:background="@color/white"
     tools:context=".MainActivity">
 
     <!--顶部工具栏-->
@@ -16,7 +16,9 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:titleTextColor="@color/text_primary" />
+        app:titleTextColor="@color/text_primary"
+        android:background="@color/white"
+        android:elevation="0dp" />
 
     <!--权限设置卡片-->
     <com.google.android.material.card.MaterialCardView
