@@ -2,5 +2,5 @@
   "versionCode": 7,
   "versionName": "1.6",
   "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v1.6/AutoSlide-v1.6.apk",
-  "updateLog": "1. 支持音量键/电源键强制停止自动滑动\n2. 息屏自动停止滑动并恢复悬浮窗面板\n3. 服务间通信改用广播机制，移除单例耦合"
+  "updateLog": "1. 支持音量键强制停止自动滑动\n2. 息屏自动停止滑动并恢复悬浮窗面板（包括按电源键）\n3. 服务间通信改用广播机制，移除单例耦合"
 }

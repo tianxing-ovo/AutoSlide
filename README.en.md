@@ -13,8 +13,8 @@ A simple and efficient auto-slide solution for Android devices, ideal for automa
 - **Slide Speed**: Multiple speed settings to meet different needs
 - **Slide Direction**: Supports sliding in four directions - up, down, left, and right
 - **Floating Window Control**: Convenient floating button control; automatically shrinks to a small icon when sliding starts, and expands the panel while stopping when tapped
-- **Force Stop**: Press volume keys or the power button during sliding to immediately stop and restore the floating panel
-- **Screen-Off Auto Stop**: Automatically stops sliding when the screen turns off to prevent unnecessary resource usage
+- **Volume Key Force Stop**: Press volume keys during sliding to immediately stop and restore the floating panel
+- **Screen-Off Auto Stop**: Automatically stops sliding when the screen turns off (including power button press) to prevent unnecessary resource usage
 - **Gesture Simulation**: Precisely simulates finger swipe gestures, ensuring behavior identical to real user operations
 - **Smart Permission Management**: Supports "Permanent Authorization" mode (via ADB); automatically activates accessibility service on app launch for enhanced convenience
 - **Easy to Use**: Intuitive user interface for effortless parameter configuration

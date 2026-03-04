@@ -43,7 +43,7 @@ class AutoSlideService : AccessibilityService() {
         }
     }
 
-    /* 屏幕关闭时强制停止滑动 */
+    /* 息屏时强制停止滑动 */
     private val screenOffReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action != Intent.ACTION_SCREEN_OFF || !isRunning) {
@@ -113,7 +113,7 @@ class AutoSlideService : AccessibilityService() {
         instance = this
         screenWidth = resources.displayMetrics.widthPixels * 2 / 3
         centerY = resources.displayMetrics.heightPixels / 2
-        // 请求按键过滤能力(用于音量键/电源键强制停止)
+        // 请求按键过滤能力(用于音量键强制停止滑动)
         serviceInfo = serviceInfo.apply {
             flags = flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
         }
@@ -146,7 +146,7 @@ class AutoSlideService : AccessibilityService() {
     override fun onInterrupt() = Unit
 
     /**
-     * 监听物理按键(在滑动运行中支持强制停止)
+     * 监听音量键(在滑动运行中按音量键强制停止)
      *
      * @param event 物理按键事件
      * @return 是否已处理按键事件
@@ -157,26 +157,14 @@ class AutoSlideService : AccessibilityService() {
             return super.onKeyEvent(event)
         }
         // 判断是否为音量键
-        val isVolumeForceStopKey = when (event.keyCode) {
-            KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_DOWN -> true
-            else -> false
-        }
-        // 判断是否为电源键
-        val isPowerForceStopKey = event.keyCode == KeyEvent.KEYCODE_POWER
-        // 判断是否为强制停止键(音量键或电源键)
-        val isForceStopKey = isVolumeForceStopKey || isPowerForceStopKey
-        // 如果不是强制停止键则继续交给系统处理
-        if (!isForceStopKey) {
+        val isVolumeKey = event.keyCode == KeyEvent.KEYCODE_VOLUME_UP
+                || event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN
+        if (!isVolumeKey) {
             return super.onKeyEvent(event)
         }
         // 强制停止滑动并恢复悬浮窗面板
         forceStop()
-        // 如果是音量键则返回已处理
-        if (isVolumeForceStopKey) {
-            return true
-        }
-        // 电源键继续交给系统处理
-        return super.onKeyEvent(event)
+        return true
     }
 
     /**
@@ -192,7 +180,7 @@ class AutoSlideService : AccessibilityService() {
     }
 
     /**
-     * 注册息屏广播(用于电源键兜底强停)
+     * 注册息屏广播
      */
     private fun registerScreenOffReceiver() {
         if (isScreenOffReceiverRegistered) {
@@ -203,7 +191,7 @@ class AutoSlideService : AccessibilityService() {
     }
 
     /**
-     * 解除息屏广播注册
+     * 注销息屏广播
      */
     private fun unregisterScreenOffReceiver() {
         if (!isScreenOffReceiverRegistered) {
