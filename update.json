@@ -1,6 +1,6 @@
 {
-  "versionCode": 6,
-  "versionName": "1.5",
-  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v1.5/AutoSlide-v1.5.apk",
-  "updateLog": "1. 统一不同品牌手机状态栏显示效果（小米/vivo）\n2. 调整主题状态栏配置，减少系统差异\n3. 清理状态栏相关废弃 API 调用"
+  "versionCode": 7,
+  "versionName": "1.6",
+  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v1.6/AutoSlide-v1.6.apk",
+  "updateLog": "1. 支持音量键/电源键强制停止自动滑动\n2. 息屏自动停止滑动并恢复悬浮窗面板\n3. 服务间通信改用广播机制，移除单例耦合"
 }

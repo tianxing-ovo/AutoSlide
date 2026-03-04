@@ -2,8 +2,10 @@ package com.ltx.service
 
 import android.annotation.SuppressLint
 import android.app.Service
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.graphics.PixelFormat
 import android.os.IBinder
@@ -13,6 +15,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import androidx.core.content.ContextCompat
 import com.ltx.MainActivity
 import com.ltx.R
 import kotlin.math.abs
@@ -33,6 +36,20 @@ class FloatingWindowService : Service() {
     private var initialY = 0f
     private var initialTouchX = 0
     private var initialTouchY = 0
+    private var isExpandReceiverRegistered = false
+
+    /* 展开悬浮窗面板的广播接收器 */
+    private val expandReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action != ACTION_EXPAND_FROM_FORCE_STOP) {
+                return
+            }
+            if (!::rootView.isInitialized) {
+                return
+            }
+            rootView.post { expand(stopSlide = false) }
+        }
+    }
 
     companion object {
         private const val TOUCH_SLOP = 10f
@@ -47,6 +64,7 @@ class FloatingWindowService : Service() {
         private const val DIRECTION_DOWN = "down"
         private const val DIRECTION_LEFT = "left"
         private const val DIRECTION_RIGHT = "right"
+        const val ACTION_EXPAND_FROM_FORCE_STOP = "com.ltx.action.EXPAND_FLOATING_FROM_FORCE_STOP"
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -66,12 +84,14 @@ class FloatingWindowService : Service() {
         setupDragging()
         setupControlButtons()
         windowManager.addView(rootView, layoutParams)
+        registerExpandReceiver()
     }
 
     /**
      * 服务销毁时移除悬浮窗
      */
     override fun onDestroy() {
+        unregisterExpandReceiver()
         super.onDestroy()
         runCatching { windowManager.removeView(rootView) }
     }
@@ -227,11 +247,40 @@ class FloatingWindowService : Service() {
     /**
      * 展开悬浮窗并停止当前自动滑动
      */
-    private fun expand() {
+    private fun expand(stopSlide: Boolean = true) {
         controlPanel.visibility = View.VISIBLE
         expandButton.visibility = View.GONE
         windowManager.updateViewLayout(rootView, layoutParams)
-        AutoSlideService.getInstance()?.stopSlide()
+        if (stopSlide) {
+            AutoSlideService.getInstance()?.stopSlide()
+        }
+    }
+
+    /**
+     * 注册展开悬浮窗面板的广播接收器
+     */
+    private fun registerExpandReceiver() {
+        if (isExpandReceiverRegistered) {
+            return
+        }
+        ContextCompat.registerReceiver(
+            this,
+            expandReceiver,
+            IntentFilter(ACTION_EXPAND_FROM_FORCE_STOP),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+        isExpandReceiverRegistered = true
+    }
+
+    /**
+     * 注销展开悬浮窗面板的广播接收器
+     */
+    private fun unregisterExpandReceiver() {
+        if (!isExpandReceiverRegistered) {
+            return
+        }
+        runCatching { unregisterReceiver(expandReceiver) }
+        isExpandReceiverRegistered = false
     }
 
     /**

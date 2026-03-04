@@ -1,12 +1,17 @@
 package com.ltx.service
 
 import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.accessibilityservice.GestureDescription
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Path
 import android.os.Handler
 import android.os.Looper
+import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 
 /**
@@ -18,6 +23,7 @@ import android.view.accessibility.AccessibilityEvent
 class AutoSlideService : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
+    private var isScreenOffReceiverRegistered = false
     private var screenWidth = 0
     private var centerY = 0
     private var speed = DEFAULT_SPEED
@@ -26,7 +32,7 @@ class AutoSlideService : AccessibilityService() {
     private var currentDirection = DIRECTION_LEFT
     private var isRunning = false
 
-    /* 自动滑动主循环*/
+    /* 自动滑动主循环 */
     private val slideRunnable = object : Runnable {
         override fun run() {
             if (!isRunning) {
@@ -34,6 +40,16 @@ class AutoSlideService : AccessibilityService() {
             }
             performSlideByDirection()
             handler.postDelayed(this, calculateDelayMillis())
+        }
+    }
+
+    /* 屏幕关闭时强制停止滑动 */
+    private val screenOffReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action != Intent.ACTION_SCREEN_OFF || !isRunning) {
+                return
+            }
+            forceStop()
         }
     }
 
@@ -97,12 +113,18 @@ class AutoSlideService : AccessibilityService() {
         instance = this
         screenWidth = resources.displayMetrics.widthPixels * 2 / 3
         centerY = resources.displayMetrics.heightPixels / 2
+        // 请求按键过滤能力(用于音量键/电源键强制停止)
+        serviceInfo = serviceInfo.apply {
+            flags = flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
+        }
+        registerScreenOffReceiver()
     }
 
     /**
      * 服务销毁时停止滑动并释放单例
      */
     override fun onDestroy() {
+        unregisterScreenOffReceiver()
         stopSlide()
         instance = null
         super.onDestroy()
@@ -122,6 +144,74 @@ class AutoSlideService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent?) = Unit
 
     override fun onInterrupt() = Unit
+
+    /**
+     * 监听物理按键(在滑动运行中支持强制停止)
+     *
+     * @param event 物理按键事件
+     * @return 是否已处理按键事件
+     */
+    override fun onKeyEvent(event: KeyEvent): Boolean {
+        // 只在按键按下且滑动正在运行时处理
+        if (event.action != KeyEvent.ACTION_DOWN || !isRunning) {
+            return super.onKeyEvent(event)
+        }
+        // 判断是否为音量键
+        val isVolumeForceStopKey = when (event.keyCode) {
+            KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_DOWN -> true
+            else -> false
+        }
+        // 判断是否为电源键
+        val isPowerForceStopKey = event.keyCode == KeyEvent.KEYCODE_POWER
+        // 判断是否为强制停止键(音量键或电源键)
+        val isForceStopKey = isVolumeForceStopKey || isPowerForceStopKey
+        // 如果不是强制停止键则继续交给系统处理
+        if (!isForceStopKey) {
+            return super.onKeyEvent(event)
+        }
+        // 强制停止滑动并恢复悬浮窗面板
+        forceStop()
+        // 如果是音量键则返回已处理
+        if (isVolumeForceStopKey) {
+            return true
+        }
+        // 电源键继续交给系统处理
+        return super.onKeyEvent(event)
+    }
+
+    /**
+     * 强制停止滑动并恢复悬浮窗面板
+     */
+    private fun forceStop() {
+        stopSlide()
+        sendBroadcast(
+            Intent(FloatingWindowService.ACTION_EXPAND_FROM_FORCE_STOP).apply {
+                `package` = packageName
+            }
+        )
+    }
+
+    /**
+     * 注册息屏广播(用于电源键兜底强停)
+     */
+    private fun registerScreenOffReceiver() {
+        if (isScreenOffReceiverRegistered) {
+            return
+        }
+        registerReceiver(screenOffReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
+        isScreenOffReceiverRegistered = true
+    }
+
+    /**
+     * 解除息屏广播注册
+     */
+    private fun unregisterScreenOffReceiver() {
+        if (!isScreenOffReceiverRegistered) {
+            return
+        }
+        runCatching { unregisterReceiver(screenOffReceiver) }
+        isScreenOffReceiverRegistered = false
+    }
 
     /**
      * 执行向上滑动
