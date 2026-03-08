@@ -1,7 +1,7 @@
 # Android Auto-Slide App [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-1.6-green)]()
+[![Version](https://img.shields.io/badge/Version-1.7-green)]()
 
 [简体中文](README.md) | [English](README.en.md)
 
@@ -10,9 +10,11 @@ A simple and efficient auto-slide solution for Android devices, ideal for automa
 ## Features
 
 - **Timed Sliding**: Customize the time interval between slides
+- **Pause Modes**: Supports three pause modes - "No Pause", "Fixed Time", and "Random Time"; random mode allows setting minimum and maximum pause duration range
 - **Slide Speed**: Multiple speed settings to meet different needs
 - **Slide Direction**: Supports sliding in four directions - up, down, left, and right
 - **Floating Window Control**: Convenient floating button control; automatically shrinks to a small icon when sliding starts, and expands the panel while stopping when tapped
+- **Permission Management**: New floating window permission toggle for quick access to system permission settings
 - **Volume Key Force Stop**: Press volume keys during sliding to immediately stop and restore the floating panel
 - **Screen-Off Auto Stop**: Automatically stops sliding when the screen turns off (including power button press) to prevent unnecessary resource usage
 - **Gesture Simulation**: Precisely simulates finger swipe gestures, ensuring behavior identical to real user operations
@@ -21,7 +23,7 @@ A simple and efficient auto-slide solution for Android devices, ideal for automa
 
 ## Screenshots
 
-![](app/src/main/res/mipmap-hdpi/screenshot.png)
+![](assets/screenshot.png)
 
 ## Quick Start
 

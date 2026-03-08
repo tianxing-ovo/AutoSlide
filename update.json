@@ -1,6 +1,6 @@
 {
-  "versionCode": 7,
-  "versionName": "1.6",
-  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v1.6/AutoSlide-v1.6.apk",
-  "updateLog": "1. 支持音量键强制停止自动滑动\n2. 息屏自动停止滑动并恢复悬浮窗面板（包括按电源键）\n3. 服务间通信改用广播机制，移除单例耦合"
+  "versionCode": 8,
+  "versionName": "1.7",
+  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v1.7/AutoSlide-v1.7.apk",
+  "updateLog": "1. 新增随机停顿时间模式\n2. 新增悬浮窗权限控制开关，可快速跳转至系统权限设置"
 }

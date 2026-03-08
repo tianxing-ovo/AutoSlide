@@ -461,7 +461,7 @@ class MainActivity : AppCompatActivity() {
                     ).show()
                 } else {
                     AlertDialog.Builder(this).setTitle(R.string.permission_required)
-                        .setMessage(R.string.accessibility_permission_message)
+                        .setMessage(R.string.accessibility_service_description)
                         .setPositiveButton(R.string.go_to_open) { _, _ ->
                             showAccessibilityOptionDialog()
                         }.setNegativeButton(R.string.cancel, null).show()

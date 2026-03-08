@@ -38,7 +38,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="@dimen/padding_medium">
+            android:padding="@dimen/margin_medium">
 
             <TextView
                 android:layout_width="match_parent"
@@ -116,7 +116,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="@dimen/padding_medium">
+            android:padding="@dimen/margin_medium">
 
             <TextView
                 android:layout_width="match_parent"
@@ -141,6 +141,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:paddingHorizontal="0dp"
                     android:text="@string/pause_mode_none"
                     app:backgroundTint="@color/toggle_btn_bg"
                     android:textColor="@color/toggle_btn_text"
@@ -152,6 +153,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:paddingHorizontal="0dp"
                     android:text="@string/pause_mode_fixed"
                     app:backgroundTint="@color/toggle_btn_bg"
                     android:textColor="@color/toggle_btn_text"
@@ -163,6 +165,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:paddingHorizontal="0dp"
                     android:text="@string/pause_mode_random"
                     app:backgroundTint="@color/toggle_btn_bg"
                     android:textColor="@color/toggle_btn_text"
@@ -304,7 +307,7 @@
         android:backgroundTint="@color/primary"
         android:text="@string/start"
         android:textColor="@color/on_primary"
-        android:textSize="@dimen/text_size_button"
+        android:textSize="18sp"
         app:backgroundTint="@color/primary"
         app:cornerRadius="32dp"
         app:layout_constraintEnd_toEndOf="parent"
