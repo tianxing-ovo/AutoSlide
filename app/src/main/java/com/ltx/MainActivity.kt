@@ -38,11 +38,17 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val PREFS_NAME = "slide_settings"
         private const val KEY_SPEED = "speed"
-        private const val KEY_NEED_PAUSE = "needPause"
+        private const val KEY_PAUSE_MODE = "pauseMode"
         private const val KEY_PAUSE_TIME = "pauseTime"
+        private const val KEY_MIN_PAUSE_TIME = "minPauseTime"
+        private const val KEY_MAX_PAUSE_TIME = "maxPauseTime"
         private const val DEFAULT_SPEED = 50
-        private const val DEFAULT_NEED_PAUSE = false
         private const val DEFAULT_PAUSE_TIME = 1
+        private const val DEFAULT_MIN_PAUSE_TIME = 1
+        private const val DEFAULT_MAX_PAUSE_TIME = 3
+        const val PAUSE_MODE_NONE = 0
+        const val PAUSE_MODE_FIXED = 1
+        const val PAUSE_MODE_RANDOM = 2
     }
 
     /**
@@ -83,11 +89,19 @@ class MainActivity : AppCompatActivity() {
         UpdateChecker.onHostResumed(this)
     }
 
+    /**
+     * 活动恢复时检查更新
+     */
     override fun onPostResume() {
         super.onPostResume()
         UpdateChecker.onHostResumed(this)
     }
 
+    /**
+     * 窗口焦点变化时检查更新
+     *
+     * @param hasFocus 是否有窗口焦点
+     */
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
@@ -99,43 +113,78 @@ class MainActivity : AppCompatActivity() {
      * 恢复上次配置
      */
     private fun restoreSettings() {
+        // 恢复滑动速度
         val speed = preferences.getInt(KEY_SPEED, DEFAULT_SPEED)
-        val needPause = preferences.getBoolean(KEY_NEED_PAUSE, DEFAULT_NEED_PAUSE)
-        val pauseTime = preferences.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME)
+        // 恢复停顿模式
+        var pauseMode = preferences.getInt(KEY_PAUSE_MODE, -1)
+        if (pauseMode == -1) {
+            val needPause = preferences.getBoolean("needPause", false)
+            pauseMode = if (needPause) PAUSE_MODE_FIXED else PAUSE_MODE_NONE
+            preferences.edit { putInt(KEY_PAUSE_MODE, pauseMode) }
+        }
+        // 恢复停顿时间
+        val pauseTime = preferences.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME).coerceAtLeast(1)
+        // 恢复随机停顿时间范围
+        val minPauseTime =
+            preferences.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME).coerceAtLeast(1)
+        val maxPauseTime =
+            preferences.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME).coerceAtLeast(1)
         binding.speedSeekBar.progress = speed
-        binding.pauseSwitch.isChecked = needPause
+        when (pauseMode) {
+            PAUSE_MODE_NONE -> binding.pauseModeToggleGroup.check(R.id.btnNoPause)
+            PAUSE_MODE_FIXED -> binding.pauseModeToggleGroup.check(R.id.btnFixedPause)
+            PAUSE_MODE_RANDOM -> binding.pauseModeToggleGroup.check(R.id.btnRandomPause)
+        }
         binding.pauseTimeSeekBar.progress = pauseTime
         binding.pauseTimeValueText.text = pauseTime.toString()
-        updatePauseTimeVisibility(needPause)
+        binding.randomPauseTimeSlider.values =
+            listOf(minPauseTime.toFloat(), maxPauseTime.toFloat())
+        binding.randomPauseTimeValueText.text =
+            getString(R.string.pause_time_range_format, minPauseTime, maxPauseTime)
+        binding.randomPauseTimeSlider.setCustomThumbDrawable(R.drawable.slider_thumb_circular)
+        updatePauseTimeVisibility(pauseMode)
     }
 
     /**
      * 绑定停顿相关控件事件并持久化用户设置
      */
     private fun setupPauseControls() {
-        binding.pauseSwitch.setOnCheckedChangeListener { _, isChecked ->
-            updatePauseTimeVisibility(isChecked)
-            preferences.edit { putBoolean(KEY_NEED_PAUSE, isChecked) }
+        binding.pauseModeToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (isChecked) {
+                val pauseMode = when (checkedId) {
+                    R.id.btnNoPause -> PAUSE_MODE_NONE
+                    R.id.btnFixedPause -> PAUSE_MODE_FIXED
+                    R.id.btnRandomPause -> PAUSE_MODE_RANDOM
+                    else -> PAUSE_MODE_NONE
+                }
+                updatePauseTimeVisibility(pauseMode)
+                preferences.edit { putInt(KEY_PAUSE_MODE, pauseMode) }
+            }
         }
         // 绑定停顿时长滑块事件
         binding.pauseTimeSeekBar.setOnSeekBarChangeListener(object :
             SeekBar.OnSeekBarChangeListener {
-            /**
-             * 停顿时长变化时同步UI与本地配置
-             *
-             * @param seekBar 当前滑块
-             * @param progress 当前进度值
-             * @param fromUser 是否由用户手势触发
-             */
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                 binding.pauseTimeValueText.text = progress.toString()
                 preferences.edit { putInt(KEY_PAUSE_TIME, progress) }
             }
-
             override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
-
             override fun onStopTrackingTouch(seekBar: SeekBar) = Unit
         })
+        // 绑定随机停顿时长范围滑块事件
+        binding.randomPauseTimeSlider.addOnChangeListener { slider, _, fromUser ->
+            val values = slider.values
+            val min = values[0].toInt()
+            val max = values[1].toInt()
+            binding.randomPauseTimeValueText.text =
+                getString(R.string.pause_time_range_format, min, max)
+            if (fromUser) {
+                preferences.edit {
+                    putInt(KEY_MIN_PAUSE_TIME, min)
+                    putInt(KEY_MAX_PAUSE_TIME, max)
+                }
+            }
+        }
     }
 
     /**
@@ -446,11 +495,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * 更新停顿时长区域的可见性
+     * 更新停顿时间面板的可见性
      *
-     * @param visible 是否显示停顿时长区域
+     * @param pauseMode 停顿模式
      */
-    private fun updatePauseTimeVisibility(visible: Boolean) {
-        binding.pauseTimeLayout.visibility = if (visible) View.VISIBLE else View.GONE
+    private fun updatePauseTimeVisibility(pauseMode: Int) {
+        binding.pauseTimeLayout.visibility =
+            if (pauseMode == PAUSE_MODE_FIXED) View.VISIBLE else View.GONE
+        binding.randomPauseTimeLayout.visibility =
+            if (pauseMode == PAUSE_MODE_RANDOM) View.VISIBLE else View.GONE
     }
 }

@@ -19,6 +19,7 @@ import androidx.core.content.ContextCompat
 import com.ltx.MainActivity
 import com.ltx.R
 import kotlin.math.abs
+import androidx.core.content.edit
 
 /**
  * 悬浮窗服务
@@ -55,11 +56,14 @@ class FloatingWindowService : Service() {
         private const val TOUCH_SLOP = 10f
         private const val PREFS_NAME = "slide_settings"
         private const val KEY_SPEED = "speed"
-        private const val KEY_NEED_PAUSE = "needPause"
+        private const val KEY_PAUSE_MODE = "pauseMode"
         private const val KEY_PAUSE_TIME = "pauseTime"
+        private const val KEY_MIN_PAUSE_TIME = "minPauseTime"
+        private const val KEY_MAX_PAUSE_TIME = "maxPauseTime"
         private const val DEFAULT_SPEED = 50
-        private const val DEFAULT_NEED_PAUSE = false
         private const val DEFAULT_PAUSE_TIME = 1
+        private const val DEFAULT_MIN_PAUSE_TIME = 1
+        private const val DEFAULT_MAX_PAUSE_TIME = 3
         private const val DIRECTION_UP = "up"
         private const val DIRECTION_DOWN = "down"
         private const val DIRECTION_LEFT = "left"
@@ -293,8 +297,16 @@ class FloatingWindowService : Service() {
         val prefs: SharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         val intent = Intent(this, AutoSlideService::class.java).apply {
             putExtra(KEY_SPEED, prefs.getInt(KEY_SPEED, DEFAULT_SPEED))
-            putExtra(KEY_NEED_PAUSE, prefs.getBoolean(KEY_NEED_PAUSE, DEFAULT_NEED_PAUSE))
+            var pauseMode = prefs.getInt(KEY_PAUSE_MODE, -1)
+            if (pauseMode == -1) {
+                val needPause = prefs.getBoolean("needPause", false)
+                pauseMode = if (needPause) 1 else 0
+                prefs.edit { putInt(KEY_PAUSE_MODE, pauseMode) }
+            }
+            putExtra(KEY_PAUSE_MODE, pauseMode)
             putExtra(KEY_PAUSE_TIME, prefs.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME))
+            putExtra(KEY_MIN_PAUSE_TIME, prefs.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME))
+            putExtra(KEY_MAX_PAUSE_TIME, prefs.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME))
         }
         startService(intent)
     }

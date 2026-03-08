@@ -27,8 +27,10 @@ class AutoSlideService : AccessibilityService() {
     private var screenWidth = 0
     private var centerY = 0
     private var speed = DEFAULT_SPEED
-    private var needPause = false
+    private var pauseMode = PAUSE_MODE_NONE
     private var pauseTime = DEFAULT_PAUSE_SECONDS
+    private var minPauseTime = 1
+    private var maxPauseTime = 3
     private var currentDirection = DIRECTION_LEFT
     private var isRunning = false
 
@@ -56,6 +58,9 @@ class AutoSlideService : AccessibilityService() {
     companion object {
         private const val DEFAULT_SPEED = 50
         private const val DEFAULT_PAUSE_SECONDS = 1
+        const val PAUSE_MODE_NONE = 0
+        const val PAUSE_MODE_FIXED = 1
+        const val PAUSE_MODE_RANDOM = 2
         private const val DIRECTION_UP = "up"
         private const val DIRECTION_DOWN = "down"
         private const val DIRECTION_LEFT = "left"
@@ -244,8 +249,10 @@ class AutoSlideService : AccessibilityService() {
      */
     private fun updateConfigFromIntent(intent: Intent) {
         speed = intent.getIntExtra("speed", DEFAULT_SPEED)
-        needPause = intent.getBooleanExtra("needPause", false)
-        pauseTime = intent.getIntExtra("pauseTime", DEFAULT_PAUSE_SECONDS)
+        pauseMode = intent.getIntExtra("pauseMode", PAUSE_MODE_NONE)
+        pauseTime = intent.getIntExtra("pauseTime", DEFAULT_PAUSE_SECONDS).coerceAtLeast(1)
+        minPauseTime = intent.getIntExtra("minPauseTime", 1).coerceAtLeast(1)
+        maxPauseTime = intent.getIntExtra("maxPauseTime", 3).coerceAtLeast(1)
     }
 
     /**
@@ -275,8 +282,14 @@ class AutoSlideService : AccessibilityService() {
      * @return 延迟毫秒值
      */
     private fun calculateDelayMillis(): Long {
-        if (needPause) {
+        if (pauseMode == PAUSE_MODE_FIXED) {
             return pauseTime.coerceAtLeast(0) * 1000L
+        } else if (pauseMode == PAUSE_MODE_RANDOM) {
+            val minMs = minPauseTime.coerceAtLeast(0) * 1000L
+            val maxMs = maxPauseTime.coerceAtLeast(0) * 1000L
+            val actualMinMs = minOf(minMs, maxMs)
+            val actualMaxMs = maxOf(minMs, maxMs)
+            return if (actualMinMs == actualMaxMs) actualMinMs else (actualMinMs..actualMaxMs).random()
         }
         return ((100 - speed.coerceIn(0, 100)) * 20L).coerceAtLeast(MIN_SLIDE_DELAY_MS)
     }

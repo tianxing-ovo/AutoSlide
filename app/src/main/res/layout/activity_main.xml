@@ -126,28 +126,49 @@
                 android:textSize="@dimen/text_size_subtitle"
                 android:textStyle="bold" />
 
-            <LinearLayout
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/pauseModeToggleGroup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/margin_small"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
+                android:layout_marginTop="@dimen/margin_medium"
+                app:singleSelection="true"
+                app:selectionRequired="true"
+                app:checkedButton="@id/btnNoPause">
+                <!--不停顿-->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnNoPause"
+                    style="?attr/materialButtonOutlinedStyle"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/setting_need_pause"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="@dimen/text_size_body" />
-                <!--停顿开关-->
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/pauseSwitch"
-                    android:layout_width="wrap_content"
+                    android:text="@string/pause_mode_none"
+                    app:backgroundTint="@color/toggle_btn_bg"
+                    android:textColor="@color/toggle_btn_text"
+                    tools:ignore="VisualLintButtonSize" />
+                <!--固定时间-->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnFixedPause"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    app:thumbTint="@color/switch_thumb_color"
-                    app:trackTint="@color/switch_track_color" />
-            </LinearLayout>
+                    android:layout_weight="1"
+                    android:text="@string/pause_mode_fixed"
+                    app:backgroundTint="@color/toggle_btn_bg"
+                    android:textColor="@color/toggle_btn_text"
+                    tools:ignore="VisualLintButtonSize" />
+                <!--随机时间-->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRandomPause"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/pause_mode_random"
+                    app:backgroundTint="@color/toggle_btn_bg"
+                    android:textColor="@color/toggle_btn_text"
+                    tools:ignore="VisualLintButtonSize" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
+
             <!--停顿时间布局-->
             <LinearLayout
                 android:id="@+id/pauseTimeLayout"
@@ -168,7 +189,6 @@
                         android:text="@string/pause_time"
                         android:textColor="@color/text_secondary"
                         android:textSize="@dimen/text_size_body" />
-                    <!--停顿时间文本-->
                     <TextView
                         android:id="@+id/pauseTimeValueText"
                         android:layout_width="wrap_content"
@@ -185,10 +205,59 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/margin_small"
+                    android:min="1"
                     android:max="10"
                     android:progress="1"
                     android:progressTint="@color/primary"
                     android:thumbTint="@color/primary" />
+            </LinearLayout>
+
+            <!--随机时间-->
+            <LinearLayout
+                android:id="@+id/randomPauseTimeLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_small"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/random_pause_time_range"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="@dimen/text_size_body" />
+
+                    <TextView
+                        android:id="@+id/randomPauseTimeValueText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:textColor="@color/primary"
+                        tools:text="1 - 3"
+                        android:textSize="@dimen/text_size_body"
+                        android:textStyle="bold" />
+                </LinearLayout>
+                <!--停顿时间范围滑动条-->
+                <com.google.android.material.slider.RangeSlider
+                    android:id="@+id/randomPauseTimeSlider"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/margin_small"
+                    android:stepSize="1.0"
+                    android:valueFrom="1.0"
+                    android:valueTo="10.0"
+                    app:tickVisible="false"
+                    app:tickColor="@android:color/transparent"
+                    app:trackHeight="4dp"
+                    app:thumbColor="@color/primary"
+                    app:trackColorActive="@color/primary"
+                    app:trackColorInactive="@color/switch_track_unchecked" />
             </LinearLayout>
 
             <TextView
