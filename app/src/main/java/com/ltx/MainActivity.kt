@@ -65,6 +65,7 @@ class MainActivity : AppCompatActivity() {
         setupPauseControls()
         setupSpeedControl()
         setupAccessibilityToggle()
+        setupOverlayToggle()
         setupStartButton()
         setupUpdateButton()
     }
@@ -78,6 +79,7 @@ class MainActivity : AppCompatActivity() {
             changeAccessibilityServiceState(enable = true)
         }
         binding.accessibilityPermissionSwitch.isChecked = isAccessibilityEnabled()
+        binding.overlayPermissionSwitch.isChecked = Settings.canDrawOverlays(this)
         UpdateChecker.onHostResumed(this)
     }
 
@@ -179,6 +181,27 @@ class MainActivity : AppCompatActivity() {
                 onAccessibilitySwitchEnabled()
             } else {
                 onAccessibilitySwitchDisabled()
+            }
+        }
+    }
+
+    /**
+     * 绑定悬浮窗权限开关点击事件
+     */
+    private fun setupOverlayToggle() {
+        binding.overlayPermissionSwitch.setOnClickListener {
+            if (binding.overlayPermissionSwitch.isChecked) {
+                if (!Settings.canDrawOverlays(this)) {
+                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
+                    startActivity(intent)
+                    binding.overlayPermissionSwitch.isChecked = false
+                }
+            } else {
+                if (Settings.canDrawOverlays(this)) {
+                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
+                    startActivity(intent)
+                    binding.overlayPermissionSwitch.isChecked = true
+                }
             }
         }
     }

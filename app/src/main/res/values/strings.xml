@@ -36,7 +36,9 @@
     <string name="desc_close">关闭</string>
     <string name="desc_expand">展开</string>
     <string name="title_required_permission">必要权限</string>
-    <string name="bind_accessibility_service">绑定无障碍服务</string>
+    <string name="bind_accessibility_service">无障碍服务权限</string>
+    <string name="overlay_permission_title">悬浮窗权限</string>
+    <string name="overlay_permission_switch">悬浮窗权限开关</string>
     <string name="title_slide_settings">滑动设置</string>
     <string name="setting_need_pause">是否需要停顿</string>
     <string name="setting_slide_speed">滑动速度</string>

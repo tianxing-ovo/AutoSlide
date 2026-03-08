@@ -71,6 +71,30 @@
                     app:thumbTint="@color/switch_thumb_color"
                     app:trackTint="@color/switch_track_color" />
             </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_small"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/overlay_permission_title"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_size_body" />
+                <!--悬浮窗权限开关-->
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/overlayPermissionSwitch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/overlay_permission_switch"
+                    app:thumbTint="@color/switch_thumb_color"
+                    app:trackTint="@color/switch_track_color" />
+            </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
