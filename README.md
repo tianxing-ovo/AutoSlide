@@ -1,7 +1,7 @@
 # 安卓自动滑动器APP [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-1.7-green)]()
+[![Version](https://img.shields.io/badge/Version-1.8-green)]()
 
 [简体中文](README.md) | [English](README.en.md)
 
@@ -29,7 +29,7 @@
 
 ### 前提条件
 
-- Android 14.0及以上版本
+- Android 12.0及以上版本
 
 ### 安装步骤
 

@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
@@ -16,6 +17,7 @@ import android.util.Base64
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -237,11 +239,8 @@ object UpdateChecker {
             }
         }
         // 注册下载完成广播
-        activity.registerReceiver(
-            receiver,
-            IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-            Context.RECEIVER_EXPORTED
-        )
+        val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+        ContextCompat.registerReceiver(activity, receiver, filter, ContextCompat.RECEIVER_EXPORTED)
     }
 
     /**
@@ -272,8 +271,14 @@ object UpdateChecker {
      * @return 当前应用的版本号
      */
     private fun getLocalVersionCode(activity: Activity): Long {
-        return activity.packageManager.getPackageInfo(
-            activity.packageName, PackageManager.PackageInfoFlags.of(0)
-        ).longVersionCode
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            activity.packageManager.getPackageInfo(
+                activity.packageName, PackageManager.PackageInfoFlags.of(0)
+            ).longVersionCode
+        } else {
+            @Suppress("DEPRECATION") activity.packageManager.getPackageInfo(
+                activity.packageName, 0
+            ).longVersionCode
+        }
     }
 }

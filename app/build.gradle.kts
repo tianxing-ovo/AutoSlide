@@ -15,13 +15,13 @@ android {
         // 应用ID: 包名
         applicationId = "com.ltx"
         // 最低支持SDK版本
-        minSdk = 34
+        minSdk = 31
         // 目标设备的SDK版本
         targetSdk = 36
         // 版本号
-        versionCode = 8
+        versionCode = 9
         // 版本名称
-        versionName = "1.7"
+        versionName = "1.8"
         // 单元测试
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

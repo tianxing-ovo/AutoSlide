@@ -1,7 +1,7 @@
 # Android Auto-Slide App [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-1.7-green)]()
+[![Version](https://img.shields.io/badge/Version-1.8-green)]()
 
 [简体中文](README.md) | [English](README.en.md)
 
@@ -29,7 +29,7 @@ A simple and efficient auto-slide solution for Android devices, ideal for automa
 
 ### Prerequisites
 
-- Android 14.0 or higher
+- Android 12.0 or higher
 
 ### Installation
 
