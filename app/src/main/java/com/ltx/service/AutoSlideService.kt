@@ -248,6 +248,7 @@ class AutoSlideService : AccessibilityService() {
      * @param intent 启动参数
      */
     private fun updateConfigFromIntent(intent: Intent) {
+        intent.getStringExtra("direction")?.let { setDirection(it) }
         speed = intent.getIntExtra("speed", DEFAULT_SPEED)
         pauseMode = intent.getIntExtra("pauseMode", PAUSE_MODE_NONE)
         pauseTime = intent.getIntExtra("pauseTime", DEFAULT_PAUSE_SECONDS).coerceAtLeast(1)
