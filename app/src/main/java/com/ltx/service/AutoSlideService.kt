@@ -25,7 +25,7 @@ class AutoSlideService : AccessibilityService() {
     private val handler = Handler(Looper.getMainLooper())
     private var isScreenOffReceiverRegistered = false
     private var screenWidth = 0
-    private var centerY = 0
+    private var screenHeight = 0
     private var speed = DEFAULT_SPEED
     private var pauseMode = PAUSE_MODE_NONE
     private var pauseTime = DEFAULT_PAUSE_SECONDS
@@ -67,10 +67,6 @@ class AutoSlideService : AccessibilityService() {
         private const val DIRECTION_RIGHT = "right"
         private const val GESTURE_DURATION_MS = 500L
         private const val MIN_SLIDE_DELAY_MS = 120L
-        private const val TOP_Y = 300f
-        private const val BOTTOM_Y = 1500f
-        private const val LEFT_X = 100f
-        private const val RIGHT_X = 900f
         private var instance: AutoSlideService? = null
 
         /**
@@ -116,8 +112,8 @@ class AutoSlideService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
-        screenWidth = resources.displayMetrics.widthPixels * 2 / 3
-        centerY = resources.displayMetrics.heightPixels / 2
+        screenWidth = resources.displayMetrics.widthPixels
+        screenHeight = resources.displayMetrics.heightPixels
         // 请求按键过滤能力(用于音量键强制停止滑动)
         serviceInfo = serviceInfo.apply {
             flags = flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
@@ -210,36 +206,40 @@ class AutoSlideService : AccessibilityService() {
      * 执行向上滑动
      */
     fun slideUp() {
-        dispatchLineGesture(
-            screenWidth.toFloat(), TOP_Y, screenWidth.toFloat(), BOTTOM_Y
-        )
+        val centerX = screenWidth / 2f
+        val topY = screenHeight * 0.2f
+        val bottomY = screenHeight * 0.8f
+        dispatchLineGesture(centerX, topY, centerX, bottomY)
     }
 
     /**
      * 执行向下滑动
      */
     fun slideDown() {
-        dispatchLineGesture(
-            screenWidth.toFloat(), BOTTOM_Y, screenWidth.toFloat(), TOP_Y
-        )
+        val centerX = screenWidth / 2f
+        val topY = screenHeight * 0.2f
+        val bottomY = screenHeight * 0.8f
+        dispatchLineGesture(centerX, bottomY, centerX, topY)
     }
 
     /**
      * 执行向左滑动
      */
     fun slideLeft() {
-        dispatchLineGesture(
-            LEFT_X, centerY.toFloat(), RIGHT_X, centerY.toFloat()
-        )
+        val centerY = screenHeight / 2f
+        val leftX = screenWidth * 0.1f
+        val rightX = screenWidth * 0.9f
+        dispatchLineGesture(leftX, centerY, rightX, centerY)
     }
 
     /**
      * 执行向右滑动
      */
     fun slideRight() {
-        dispatchLineGesture(
-            RIGHT_X, centerY.toFloat(), LEFT_X, centerY.toFloat()
-        )
+        val centerY = screenHeight / 2f
+        val leftX = screenWidth * 0.1f
+        val rightX = screenWidth * 0.9f
+        dispatchLineGesture(rightX, centerY, leftX, centerY)
     }
 
     /**
