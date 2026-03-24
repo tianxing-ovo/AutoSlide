@@ -206,40 +206,56 @@ class AutoSlideService : AccessibilityService() {
      * 执行向上滑动
      */
     fun slideUp() {
+        // 滑动起点X坐标和终点X坐标(屏幕宽度的中心点X坐标)
         val centerX = screenWidth / 2f
-        val topY = screenHeight * 0.2f
-        val bottomY = screenHeight * 0.8f
-        dispatchLineGesture(centerX, topY, centerX, bottomY)
+        // 滑动起点Y坐标(屏幕顶部20%处)
+        val startY = screenHeight * 0.2f
+        // 滑动终点Y坐标(屏幕底部80%处)
+        val endY = screenHeight * 0.8f
+        // 执行滑动手势: 从屏幕顶部20%处滑动到屏幕底部80%处
+        dispatchLineGesture(centerX, startY, centerX, endY)
     }
 
     /**
      * 执行向下滑动
      */
     fun slideDown() {
+        // 滑动起点X坐标和终点X坐标(屏幕宽度的中心点X坐标)
         val centerX = screenWidth / 2f
-        val topY = screenHeight * 0.2f
-        val bottomY = screenHeight * 0.8f
-        dispatchLineGesture(centerX, bottomY, centerX, topY)
+        // 滑动起点Y坐标(屏幕底部80%处)
+        val startY = screenHeight * 0.8f
+        // 滑动终点Y坐标(屏幕顶部20%处)
+        val endY = screenHeight * 0.2f
+        // 执行滑动手势: 从屏幕底部80%处滑动到屏幕顶部20%处
+        dispatchLineGesture(centerX, startY, centerX, endY)
     }
 
     /**
      * 执行向左滑动
      */
     fun slideLeft() {
+        // 滑动起点Y坐标和终点Y坐标(屏幕高度的中心点Y坐标)
         val centerY = screenHeight / 2f
-        val leftX = screenWidth * 0.1f
-        val rightX = screenWidth * 0.9f
-        dispatchLineGesture(leftX, centerY, rightX, centerY)
+        // 滑动起点X坐标(屏幕左侧10%处)
+        val startX = screenWidth * 0.1f
+        // 滑动终点X坐标(屏幕右侧90%处)
+        val endX = screenWidth * 0.9f
+        // 执行滑动手势: 从屏幕左侧10%处滑动到屏幕右侧90%处
+        dispatchLineGesture(startX, centerY, endX, centerY)
     }
 
     /**
      * 执行向右滑动
      */
     fun slideRight() {
+        // 滑动起点Y坐标和终点Y坐标(屏幕高度的中心点Y坐标)
         val centerY = screenHeight / 2f
-        val leftX = screenWidth * 0.1f
-        val rightX = screenWidth * 0.9f
-        dispatchLineGesture(rightX, centerY, leftX, centerY)
+        // 滑动起点X坐标(屏幕右侧90%处)
+        val startX = screenWidth * 0.9f
+        // 滑动终点X坐标(屏幕左侧10%处)
+        val endX = screenWidth * 0.1f
+        // 执行滑动手势: 从屏幕右侧90%处滑动到屏幕左侧10%处
+        dispatchLineGesture(startX, centerY, endX, centerY)
     }
 
     /**
@@ -261,7 +277,8 @@ class AutoSlideService : AccessibilityService() {
     private fun startAutoSlide() {
         isRunning = true
         handler.removeCallbacks(slideRunnable)
-        handler.post(slideRunnable)
+        // 延迟300ms执行第一次滑动(等待悬浮窗完成最小化动画)(防止悬浮窗拦截手势)
+        handler.postDelayed(slideRunnable, 300L)
     }
 
     /**
