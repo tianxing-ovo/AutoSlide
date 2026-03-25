@@ -214,9 +214,7 @@ class MainActivity : AppCompatActivity() {
                 if (!isAccessibilityEnabled()) {
                     return
                 }
-                val intent = Intent(this@MainActivity, AutoSlideService::class.java)
-                intent.putExtra(KEY_SPEED, seekBar.progress)
-                startService(intent)
+                AutoSlideService.getInstance()?.updateSpeed(seekBar.progress)
             }
         })
     }

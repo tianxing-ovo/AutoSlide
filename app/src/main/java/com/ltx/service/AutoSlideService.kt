@@ -91,6 +91,20 @@ class AutoSlideService : AccessibilityService() {
     }
 
     /**
+     * 更新滑动速度而不触发启动逻辑
+     *
+     * @param newSpeed 最新速度值
+     */
+    fun updateSpeed(newSpeed: Int) {
+        speed = newSpeed.coerceIn(0, 100)
+        if (!isRunning) {
+            return
+        }
+        handler.removeCallbacks(slideRunnable)
+        handler.postDelayed(slideRunnable, calculateDelayMillis())
+    }
+
+    /**
      * 接收外部启动参数并开始自动滑动
      *
      * @param intent 启动参数(包含速度与停顿配置)
