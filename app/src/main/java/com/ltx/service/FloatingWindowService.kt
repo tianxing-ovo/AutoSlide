@@ -250,6 +250,8 @@ class FloatingWindowService : Service() {
 
     /**
      * 展开悬浮窗并停止当前自动滑动
+     *
+     * @param stopSlide 是否停止当前自动滑动
      */
     private fun expand(stopSlide: Boolean = true) {
         controlPanel.visibility = View.VISIBLE
