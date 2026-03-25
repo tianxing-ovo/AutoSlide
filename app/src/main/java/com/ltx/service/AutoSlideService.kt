@@ -13,6 +13,8 @@ import android.os.Handler
 import android.os.Looper
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
+import kotlin.math.ln
+import kotlin.math.roundToLong
 
 /**
  * 自动滑动无障碍服务
@@ -40,8 +42,12 @@ class AutoSlideService : AccessibilityService() {
             if (!isRunning) {
                 return
             }
-            performSlideByDirection()
-            handler.postDelayed(this, calculateDelayMillis())
+            // 计算手势持续时间
+            val gestureDurationMillis = calculateGestureDurationMillis()
+            // 执行滑动
+            performSlideByDirection(gestureDurationMillis)
+            // 计算并设置下一次滑动时间
+            handler.postDelayed(this, gestureDurationMillis + calculatePauseDelayMillis())
         }
     }
 
@@ -65,8 +71,10 @@ class AutoSlideService : AccessibilityService() {
         private const val DIRECTION_DOWN = "down"
         private const val DIRECTION_LEFT = "left"
         private const val DIRECTION_RIGHT = "right"
-        private const val GESTURE_DURATION_MS = 500L
-        private const val MIN_SLIDE_DELAY_MS = 120L
+        private const val MIN_GESTURE_DURATION_MS = 100L
+        private const val MAX_GESTURE_DURATION_MS = 900L
+        private const val NO_PAUSE_GAP_MS = 80L
+        private const val SPEED_CURVE_FACTOR = 0.7
         private var instance: AutoSlideService? = null
 
         /**
@@ -101,7 +109,10 @@ class AutoSlideService : AccessibilityService() {
             return
         }
         handler.removeCallbacks(slideRunnable)
-        handler.postDelayed(slideRunnable, calculateDelayMillis())
+        // 重新设置滑动时间
+        handler.postDelayed(
+            slideRunnable, calculateGestureDurationMillis() + calculatePauseDelayMillis()
+        )
     }
 
     /**
@@ -218,8 +229,10 @@ class AutoSlideService : AccessibilityService() {
 
     /**
      * 执行向上滑动
+     *
+     * @param durationMillis 手势持续时间(毫秒)
      */
-    fun slideUp() {
+    private fun slideUp(durationMillis: Long) {
         // 滑动起点X坐标和终点X坐标(屏幕宽度的中心点X坐标)
         val centerX = screenWidth / 2f
         // 滑动起点Y坐标(屏幕顶部20%处)
@@ -227,13 +240,15 @@ class AutoSlideService : AccessibilityService() {
         // 滑动终点Y坐标(屏幕底部80%处)
         val endY = screenHeight * 0.8f
         // 执行滑动手势: 从屏幕顶部20%处滑动到屏幕底部80%处
-        dispatchLineGesture(centerX, startY, centerX, endY)
+        dispatchLineGesture(centerX, startY, centerX, endY, durationMillis)
     }
 
     /**
      * 执行向下滑动
+     *
+     * @param durationMillis 手势持续时间(毫秒)
      */
-    fun slideDown() {
+    private fun slideDown(durationMillis: Long) {
         // 滑动起点X坐标和终点X坐标(屏幕宽度的中心点X坐标)
         val centerX = screenWidth / 2f
         // 滑动起点Y坐标(屏幕底部80%处)
@@ -241,13 +256,15 @@ class AutoSlideService : AccessibilityService() {
         // 滑动终点Y坐标(屏幕顶部20%处)
         val endY = screenHeight * 0.2f
         // 执行滑动手势: 从屏幕底部80%处滑动到屏幕顶部20%处
-        dispatchLineGesture(centerX, startY, centerX, endY)
+        dispatchLineGesture(centerX, startY, centerX, endY, durationMillis)
     }
 
     /**
      * 执行向左滑动
+     *
+     * @param durationMillis 手势持续时间(毫秒)
      */
-    fun slideLeft() {
+    private fun slideLeft(durationMillis: Long) {
         // 滑动起点Y坐标和终点Y坐标(屏幕高度的中心点Y坐标)
         val centerY = screenHeight / 2f
         // 滑动起点X坐标(屏幕左侧10%处)
@@ -255,13 +272,15 @@ class AutoSlideService : AccessibilityService() {
         // 滑动终点X坐标(屏幕右侧90%处)
         val endX = screenWidth * 0.9f
         // 执行滑动手势: 从屏幕左侧10%处滑动到屏幕右侧90%处
-        dispatchLineGesture(startX, centerY, endX, centerY)
+        dispatchLineGesture(startX, centerY, endX, centerY, durationMillis)
     }
 
     /**
      * 执行向右滑动
+     *
+     * @param durationMillis 手势持续时间(毫秒)
      */
-    fun slideRight() {
+    private fun slideRight(durationMillis: Long) {
         // 滑动起点Y坐标和终点Y坐标(屏幕高度的中心点Y坐标)
         val centerY = screenHeight / 2f
         // 滑动起点X坐标(屏幕右侧90%处)
@@ -269,7 +288,7 @@ class AutoSlideService : AccessibilityService() {
         // 滑动终点X坐标(屏幕左侧10%处)
         val endX = screenWidth * 0.1f
         // 执行滑动手势: 从屏幕右侧90%处滑动到屏幕左侧10%处
-        dispatchLineGesture(startX, centerY, endX, centerY)
+        dispatchLineGesture(startX, centerY, endX, centerY, durationMillis)
     }
 
     /**
@@ -297,22 +316,37 @@ class AutoSlideService : AccessibilityService() {
 
     /**
      * 按当前方向执行一次滑动
+     *
+     * @param durationMillis 手势持续时间(毫秒)
      */
-    private fun performSlideByDirection() {
+    private fun performSlideByDirection(durationMillis: Long) {
         when (currentDirection) {
-            DIRECTION_UP -> slideUp()
-            DIRECTION_DOWN -> slideDown()
-            DIRECTION_RIGHT -> slideRight()
-            else -> slideLeft()
+            DIRECTION_UP -> slideUp(durationMillis)
+            DIRECTION_DOWN -> slideDown(durationMillis)
+            DIRECTION_RIGHT -> slideRight(durationMillis)
+            else -> slideLeft(durationMillis)
         }
     }
 
     /**
-     * 计算下一次滑动延迟
+     * 计算滑动手势持续时间
      *
-     * @return 延迟毫秒值
+     * @return 手势持续时间(毫秒)
      */
-    private fun calculateDelayMillis(): Long {
+    private fun calculateGestureDurationMillis(): Long {
+        val normalizedSpeed = speed.coerceIn(0, 100) / 100.0
+        val curvedProgress = ln(1.0 + SPEED_CURVE_FACTOR * normalizedSpeed) /
+                ln(1.0 + SPEED_CURVE_FACTOR)
+        val durationRange = MAX_GESTURE_DURATION_MS - MIN_GESTURE_DURATION_MS
+        return (MAX_GESTURE_DURATION_MS - durationRange * curvedProgress).roundToLong()
+    }
+
+    /**
+     * 计算两次滑动之间的停顿时间
+     *
+     * @return 停顿时间(毫秒)
+     */
+    private fun calculatePauseDelayMillis(): Long {
         if (pauseMode == PAUSE_MODE_FIXED) {
             return pauseTime.coerceAtLeast(0) * 1000L
         } else if (pauseMode == PAUSE_MODE_RANDOM) {
@@ -322,25 +356,28 @@ class AutoSlideService : AccessibilityService() {
             val actualMaxMs = maxOf(minMs, maxMs)
             return if (actualMinMs == actualMaxMs) actualMinMs else (actualMinMs..actualMaxMs).random()
         }
-        return ((100 - speed.coerceIn(0, 100)) * 20L).coerceAtLeast(MIN_SLIDE_DELAY_MS)
+        return NO_PAUSE_GAP_MS
     }
 
     /**
      * 分发一条线性手势
      *
-     * @param startX 起点X
-     * @param startY 起点Y
-     * @param endX 终点X
-     * @param endY 终点Y
+     * @param startX 起点X坐标
+     * @param startY 起点Y坐标
+     * @param endX 终点X坐标
+     * @param endY 终点Y坐标
+     * @param durationMillis 手势持续时间(毫秒)
      */
-    private fun dispatchLineGesture(startX: Float, startY: Float, endX: Float, endY: Float) {
+    private fun dispatchLineGesture(
+        startX: Float, startY: Float, endX: Float, endY: Float, durationMillis: Long
+    ) {
         val path = Path().apply {
             moveTo(startX, startY)
             lineTo(endX, endY)
         }
         // 构建并分发手势
         val gesture = GestureDescription.Builder().addStroke(
-            GestureDescription.StrokeDescription(path, 0, GESTURE_DURATION_MS)
+            GestureDescription.StrokeDescription(path, 0, durationMillis)
         ).build()
         // 分发手势
         dispatchGesture(gesture, null, null)
