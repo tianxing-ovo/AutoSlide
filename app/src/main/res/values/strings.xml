@@ -4,6 +4,8 @@
     <string name="accessibility_disable_message">请在系统设置中手动关闭无障碍服务</string>
     <string name="start">开始</string>
     <string name="pause_time">停顿时间（秒）：</string>
+    <string name="custom_pause_time">自定义停顿时间（秒）</string>
+    <string name="invalid_input_number">请输入有效数字</string>
     <string name="permission_required">需要权限</string>
     <string name="accessibility_service_permission_switch">无障碍服务权限开关</string>
     <string name="go_to_open">去开启</string>

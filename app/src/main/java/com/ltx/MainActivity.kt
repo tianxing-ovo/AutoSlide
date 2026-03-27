@@ -8,11 +8,15 @@ import android.content.ClipboardManager
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.graphics.Paint
 import android.graphics.Typeface
 import android.os.Bundle
 import android.provider.Settings
+import android.text.InputType
 import android.view.View
 import android.view.WindowInsetsController
+import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.SeekBar
 import android.widget.TextView
@@ -135,6 +139,8 @@ class MainActivity : AppCompatActivity() {
             PAUSE_MODE_FIXED -> binding.pauseModeToggleGroup.check(R.id.btnFixedPause)
             PAUSE_MODE_RANDOM -> binding.pauseModeToggleGroup.check(R.id.btnRandomPause)
         }
+        // 动态调整滑块最大值
+        binding.pauseTimeSeekBar.max = maxOf(10, pauseTime)
         binding.pauseTimeSeekBar.progress = pauseTime
         binding.pauseTimeValueText.text = pauseTime.toString()
         binding.randomPauseTimeSlider.values =
@@ -160,6 +166,36 @@ class MainActivity : AppCompatActivity() {
                 updatePauseTimeVisibility(pauseMode)
                 preferences.edit { putInt(KEY_PAUSE_MODE, pauseMode) }
             }
+        }
+        // 停顿时间文本添加下划线效果
+        binding.pauseTimeValueText.paintFlags =
+            binding.pauseTimeValueText.paintFlags or Paint.UNDERLINE_TEXT_FLAG
+        // 停顿时间文本绑定点击事件
+        binding.pauseTimeValueText.setOnClickListener {
+            val editText = EditText(this).apply {
+                inputType = InputType.TYPE_CLASS_NUMBER
+                setText(binding.pauseTimeValueText.text)
+                setSelection(text.length)
+            }
+            val padding = (24 * resources.displayMetrics.density).toInt()
+            val container = FrameLayout(this).apply {
+                setPadding(padding, padding / 3, padding, padding / 3)
+                addView(editText)
+            }
+            // 显示自定义停顿时间对话框
+            AlertDialog.Builder(this).setTitle(R.string.custom_pause_time).setView(container)
+                .setPositiveButton(android.R.string.ok) { _, _ ->
+                    val value = editText.text.toString().toIntOrNull()
+                    if (value != null && value > 0) {
+                        preferences.edit { putInt(KEY_PAUSE_TIME, value) }
+                        binding.pauseTimeSeekBar.max = maxOf(10, value)
+                        binding.pauseTimeSeekBar.progress = value
+                        binding.pauseTimeValueText.text = value.toString()
+                    } else {
+                        Toast.makeText(this, R.string.invalid_input_number, Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                }.setNegativeButton(R.string.cancel, null).show()
         }
         // 绑定停顿时长滑块事件
         binding.pauseTimeSeekBar.setOnSeekBarChangeListener(object :
