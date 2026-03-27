@@ -2,5 +2,5 @@
   "versionCode": 11,
   "versionName": "2.0",
   "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v2.0/AutoSlide-v2.0.apk",
-  "updateLog": "1. 修复调节滑动速度时误触发开始滑动的问题\n2. 优化滑动速度算法，提升不同档位的滑动手感\n3. 为不停顿模式增加微小间隔，提升连续滑动稳定性\n4. 手势坐标改为基于屏幕尺寸动态计算"
+  "updateLog": "1. 集成 Shizuku 授权，支持更便捷地自动开启无障碍服务\n2. 优化权限开关监听逻辑，减少重复触发并提升交互体验\n3. 支持手动输入自定义停顿时间，参数设置更灵活"
 }
