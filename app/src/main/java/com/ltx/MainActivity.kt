@@ -256,11 +256,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * 绑定无障碍权限开关点击事件
+     * 设置无障碍服务权限开关监听器
      */
     private fun setupAccessibilityToggle() {
-        binding.accessibilityPermissionSwitch.setOnClickListener {
-            if (binding.accessibilityPermissionSwitch.isChecked) {
+        binding.accessibilityPermissionSwitch.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked == isAccessibilityEnabled()) return@setOnCheckedChangeListener
+            if (isChecked) {
                 onAccessibilitySwitchEnabled()
             } else {
                 onAccessibilitySwitchDisabled()
@@ -269,22 +270,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * 绑定悬浮窗权限开关点击事件
+     * 设置悬浮窗权限开关监听器
      */
     private fun setupOverlayToggle() {
-        binding.overlayPermissionSwitch.setOnClickListener {
-            if (binding.overlayPermissionSwitch.isChecked) {
-                if (!Settings.canDrawOverlays(this)) {
-                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
-                    startActivity(intent)
-                    binding.overlayPermissionSwitch.isChecked = false
-                }
+        binding.overlayPermissionSwitch.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked == Settings.canDrawOverlays(this)) return@setOnCheckedChangeListener
+            if (isChecked) {
+                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
+                startActivity(intent)
+                binding.overlayPermissionSwitch.isChecked = false
             } else {
-                if (Settings.canDrawOverlays(this)) {
-                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
-                    startActivity(intent)
-                    binding.overlayPermissionSwitch.isChecked = true
-                }
+                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
+                startActivity(intent)
+                binding.overlayPermissionSwitch.isChecked = true
             }
         }
     }
