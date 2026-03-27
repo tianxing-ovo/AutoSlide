@@ -13,6 +13,7 @@ import android.graphics.Typeface
 import android.os.Bundle
 import android.provider.Settings
 import android.text.InputType
+import android.util.Log
 import android.view.View
 import android.view.WindowInsetsController
 import android.widget.EditText
@@ -27,6 +28,8 @@ import androidx.core.graphics.toColorInt
 import com.ltx.databinding.ActivityMainBinding
 import com.ltx.service.AutoSlideService
 import com.ltx.service.FloatingWindowService
+import rikka.shizuku.Shizuku
+import rikka.shizuku.ShizukuRemoteProcess
 import java.util.Locale
 
 /**
@@ -39,8 +42,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var preferences: SharedPreferences
 
+    /**
+     * 全局常量
+     */
     companion object {
+        private const val TAG = "MainActivity"
         private const val PREFS_NAME = "slide_settings"
+        private const val SHIZUKU_PERMISSION_REQUEST_CODE = 100
         private const val KEY_SPEED = "speed"
         private const val KEY_PAUSE_MODE = "pauseMode"
         private const val KEY_PAUSE_TIME = "pauseTime"
@@ -56,12 +64,31 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * Shizuku命令执行结果数据类
+     */
+    private data class ShizukuCommandResult(
+        val exitCode: Int, val stdout: String, val stderr: String
+    )
+
+    /* Shizuku权限请求监听器 */
+    private val shizukuPermissionListener =
+        Shizuku.OnRequestPermissionResultListener { requestCode, grantResult ->
+            if (requestCode == SHIZUKU_PERMISSION_REQUEST_CODE && grantResult == PackageManager.PERMISSION_GRANTED) {
+                grantPermissionViaShizuku()
+            } else {
+                Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
+                binding.accessibilityPermissionSwitch.isChecked = false
+            }
+        }
+
+    /**
      * 初始化Activity界面布局和事件绑定
      *
      * @param savedInstanceState 系统恢复状态
      */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Shizuku.addRequestPermissionResultListener(shizukuPermissionListener)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         // 设置状态栏图标颜色为深色
@@ -111,6 +138,14 @@ class MainActivity : AppCompatActivity() {
         if (hasFocus) {
             UpdateChecker.onHostResumed(this)
         }
+    }
+
+    /**
+     * 活动销毁时移除Shizuku权限请求监听器
+     */
+    override fun onDestroy() {
+        super.onDestroy()
+        Shizuku.removeRequestPermissionResultListener(shizukuPermissionListener)
     }
 
     /**
@@ -309,6 +344,7 @@ class MainActivity : AppCompatActivity() {
         // 有权限时直接关闭服务
         if (hasSecureSettingsPermission()) {
             changeAccessibilityServiceState(enable = false)
+            Toast.makeText(this, R.string.accessibility_service_disabled, Toast.LENGTH_SHORT).show()
             return
         }
         // 无权限时提示用户前往设置
@@ -325,19 +361,104 @@ class MainActivity : AppCompatActivity() {
      * 展示无障碍开启方式选择
      */
     private fun showAccessibilityOptionDialog() {
-        val options =
-            arrayOf(getString(R.string.manual_enable), getString(R.string.permanent_authorization))
+        val options = arrayOf(
+            getString(R.string.manual_enable),
+            getString(R.string.shizuku_authorization),
+            getString(R.string.adb_authorization)
+        )
+        // 展示选择对话框
         AlertDialog.Builder(this).setTitle(R.string.choose_enable_method)
             .setItems(options) { _, which ->
-                if (which == 0) {
-                    openAppAccessibilitySettings()
-                } else {
-                    showAdbCommandDialog()
-                    binding.accessibilityPermissionSwitch.isChecked = false
+                when (which) {
+                    0 -> openAppAccessibilitySettings()
+                    1 -> handleShizukuAuthorization()
+                    2 -> {
+                        showAdbCommandDialog()
+                        binding.accessibilityPermissionSwitch.isChecked = false
+                    }
                 }
             }.setOnCancelListener {
                 binding.accessibilityPermissionSwitch.isChecked = false
             }.show()
+    }
+
+    /**
+     * 处理Shizuku授权
+     */
+    private fun handleShizukuAuthorization() {
+        // 检查Shizuku是否运行
+        if (!Shizuku.pingBinder()) {
+            Toast.makeText(this, R.string.shizuku_not_running, Toast.LENGTH_SHORT).show()
+            binding.accessibilityPermissionSwitch.isChecked = false
+            return
+        }
+        // 检查Shizuku权限是否已授权
+        if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
+            grantPermissionViaShizuku()
+        } else {
+            try {
+                Shizuku.requestPermission(SHIZUKU_PERMISSION_REQUEST_CODE)
+            } catch (exception: IllegalStateException) {
+                Log.e(TAG, "Failed to request Shizuku permission", exception)
+                Toast.makeText(this, R.string.shizuku_exception, Toast.LENGTH_SHORT).show()
+                binding.accessibilityPermissionSwitch.isChecked = false
+            }
+        }
+    }
+
+    /**
+     * 通过Shizuku授权"WRITE_SECURE_SETTINGS"权限
+     */
+    private fun grantPermissionViaShizuku() {
+        try {
+            val result = executeShizukuCommand(
+                "/system/bin/pm", "grant", packageName, Manifest.permission.WRITE_SECURE_SETTINGS
+            )
+            if (result.exitCode != 0) {
+                Log.e(
+                    TAG,
+                    "Shizuku grant failed with exitCode=${result.exitCode}, stdout=${result.stdout}, stderr=${result.stderr}"
+                )
+                Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
+                binding.accessibilityPermissionSwitch.isChecked = false
+                return
+            }
+            binding.accessibilityPermissionSwitch.post {
+                if (hasSecureSettingsPermission()) {
+                    changeAccessibilityServiceState(enable = true)
+                    Toast.makeText(this, R.string.accessibility_service_enabled, Toast.LENGTH_SHORT)
+                        .show()
+                } else {
+                    Log.e(TAG, "WRITE_SECURE_SETTINGS still missing after Shizuku grant")
+                    Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
+                    binding.accessibilityPermissionSwitch.isChecked = false
+                }
+            }
+        } catch (exception: Exception) {
+            Log.e(TAG, "Shizuku grant execution failed", exception)
+            Toast.makeText(this, R.string.shizuku_exception, Toast.LENGTH_SHORT).show()
+            binding.accessibilityPermissionSwitch.isChecked = false
+        }
+    }
+
+    /**
+     * 执行Shizuku命令
+     *
+     * @param command 要执行的命令
+     * @return 命令执行结果
+     */
+    private fun executeShizukuCommand(vararg command: String): ShizukuCommandResult {
+        val newProcessMethod = Shizuku::class.java.getDeclaredMethod(
+            "newProcess", Array<String>::class.java, Array<String>::class.java, String::class.java
+        ).apply {
+            isAccessible = true
+        }
+        val process = newProcessMethod.invoke(null, command, null, null) as ShizukuRemoteProcess
+        val exitCode = process.waitFor()
+        val stdout = process.inputStream.bufferedReader().use { it.readText().trim() }
+        val stderr = process.errorStream.bufferedReader().use { it.readText().trim() }
+        process.destroy()
+        return ShizukuCommandResult(exitCode, stdout, stderr)
     }
 
     /**
@@ -377,14 +498,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * 显示永久授权所需的ADB命令弹窗
+     * 显示ADB授权所需的命令弹窗
      */
     @SuppressLint("SetTextI18n")
     private fun showAdbCommandDialog() {
         val command = "adb shell pm grant $packageName android.permission.WRITE_SECURE_SETTINGS"
         val content = createAdbDialogContent(command)
         // 展示ADB命令弹窗
-        AlertDialog.Builder(this).setTitle(R.string.get_permanent_authorization).setView(content)
+        AlertDialog.Builder(this).setTitle(R.string.authorize_via_adb).setView(content)
             .setPositiveButton(R.string.copy_command) { _, _ ->
                 copyToClipboard(command)
                 Toast.makeText(this, R.string.command_copied, Toast.LENGTH_SHORT).show()
