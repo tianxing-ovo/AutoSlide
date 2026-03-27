@@ -1,7 +1,7 @@
 # 安卓自动滑动器APP [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-1.9-green)]()
+[![Version](https://img.shields.io/badge/Version-2.0-green)]()
 
 [简体中文](README.md) | [English](README.en.md)
 
@@ -24,7 +24,7 @@
 
 ## 最近更新
 
-- `v1.9`
+- `v2.0`
 - 修复调节滑动速度时误触发开始滑动的问题
 - 优化滑动速度算法，提升不同档位的滑动手感
 - 为不停顿模式增加微小间隔，提升连续滑动稳定性
