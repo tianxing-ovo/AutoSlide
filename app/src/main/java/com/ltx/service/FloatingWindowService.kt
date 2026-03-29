@@ -233,9 +233,8 @@ class FloatingWindowService : Service() {
      */
     private fun bindDirectionButton(viewId: Int, direction: String) {
         rootView.findViewById<View>(viewId).setOnClickListener {
-            val service = AutoSlideService.getInstance() ?: return@setOnClickListener
-            service.setDirection(direction)
-            startSlide()
+            AutoSlideService.getInstance()?.setDirection(direction)
+            startSlide(direction)
         }
     }
 
@@ -292,12 +291,14 @@ class FloatingWindowService : Service() {
     /**
      * 启动自动滑动服务
      *
+     * @param direction 滑动方向
      */
-    private fun startSlide() {
+    private fun startSlide(direction: String = DIRECTION_LEFT) {
         minimize()
         // 从本地配置文件读取当前设置
         val prefs: SharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         val intent = Intent(this, AutoSlideService::class.java).apply {
+            putExtra("direction", direction)
             putExtra(KEY_SPEED, prefs.getInt(KEY_SPEED, DEFAULT_SPEED))
             var pauseMode = prefs.getInt(KEY_PAUSE_MODE, -1)
             if (pauseMode == -1) {
