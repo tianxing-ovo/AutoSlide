@@ -17,13 +17,13 @@ import android.view.WindowInsetsController
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.core.graphics.toColorInt
 import androidx.core.view.isVisible
+import com.google.android.material.slider.Slider
 import com.ltx.databinding.ActivityMainBinding
 import com.ltx.service.AutoSlideService
 import com.ltx.service.FloatingWindowService
@@ -47,7 +47,6 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MainActivity"
         private const val SHIZUKU_PERMISSION_REQUEST_CODE = 100
-
         // 无障碍授权方式选项常量
         private const val OPTION_MANUAL = 0
         private const val OPTION_SHIZUKU = 1
@@ -102,9 +101,7 @@ class MainActivity : AppCompatActivity() {
         setupUpdateButton()
     }
 
-    /**
-     * 活动恢复时检查⌈无障碍服务权限⌋并同步开关状态
-     */
+    /* 活动恢复时检查⌈无障碍服务权限⌋并同步开关状态 */
     override fun onResume() {
         super.onResume()
         // 检查是否具备⌈写入安全设置权限⌋并且⌈无障碍服务权限⌋未启用
@@ -121,9 +118,7 @@ class MainActivity : AppCompatActivity() {
         UpdateChecker.onHostResumed(this)
     }
 
-    /**
-     * 活动恢复时检查更新
-     */
+    /* 活动恢复时检查更新 */
     override fun onPostResume() {
         super.onPostResume()
         UpdateChecker.onHostResumed(this)
@@ -141,17 +136,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * 活动销毁时移除Shizuku权限请求监听器
-     */
+    /* 活动销毁时移除Shizuku权限请求监听器 */
     override fun onDestroy() {
         super.onDestroy()
         Shizuku.removeRequestPermissionResultListener(shizukuPermissionListener)
     }
 
-    /**
-     * 恢复上次配置
-     */
+    /* 恢复上次配置 */
     private fun restoreSettings() {
         // 恢复滑动速度
         val speed = preferences.getInt(KEY_SPEED, DEFAULT_SPEED)
@@ -169,27 +160,24 @@ class MainActivity : AppCompatActivity() {
             preferences.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME).coerceAtLeast(1)
         val maxPauseTime =
             preferences.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME).coerceAtLeast(1)
-        binding.speedSeekBar.progress = speed
+        binding.speedSlider.value = speed.toFloat()
+        binding.speedSlider.setCustomThumbDrawable(R.drawable.slider_thumb_circular)
         when (pauseMode) {
             PAUSE_MODE_NONE -> binding.pauseModeToggleGroup.check(R.id.btnNoPause)
             PAUSE_MODE_FIXED -> binding.pauseModeToggleGroup.check(R.id.btnFixedPause)
             PAUSE_MODE_RANDOM -> binding.pauseModeToggleGroup.check(R.id.btnRandomPause)
         }
         // 动态调整滑块最大值
-        binding.pauseTimeSeekBar.max = maxOf(10, pauseTime)
-        binding.pauseTimeSeekBar.progress = pauseTime
-        binding.pauseTimeValueText.text = pauseTime.toString()
+        binding.pauseTimeSlider.valueTo = maxOf(10, pauseTime).toFloat()
+        binding.pauseTimeSlider.value = pauseTime.toFloat()
         binding.randomPauseTimeSlider.values =
             listOf(minPauseTime.toFloat(), maxPauseTime.toFloat())
-        binding.randomPauseTimeValueText.text =
-            getString(R.string.pause_time_range_format, minPauseTime, maxPauseTime)
+        binding.pauseTimeSlider.setCustomThumbDrawable(R.drawable.slider_thumb_circular)
         binding.randomPauseTimeSlider.setCustomThumbDrawable(R.drawable.slider_thumb_circular)
         updatePauseTimeVisibility(pauseMode)
     }
 
-    /**
-     * 绑定停顿相关控件事件并持久化用户设置
-     */
+    /* 绑定停顿相关控件事件并持久化用户设置 */
     private fun setupPauseControls() {
         binding.pauseModeToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
@@ -203,11 +191,12 @@ class MainActivity : AppCompatActivity() {
                 preferences.edit { putInt(KEY_PAUSE_MODE, pauseMode) }
             }
         }
-        // 停顿时间文本添加下划线效果
-        binding.pauseTimeValueText.paintFlags =
-            binding.pauseTimeValueText.paintFlags or Paint.UNDERLINE_TEXT_FLAG
         // 停顿时间文本绑定点击事件
         binding.pauseTimeValueText.setOnClickListener {
+            if (preferences.getInt(
+                    KEY_PAUSE_MODE, PAUSE_MODE_NONE
+                ) != PAUSE_MODE_FIXED
+            ) return@setOnClickListener
             val editText = EditText(this).apply {
                 inputType = InputType.TYPE_CLASS_NUMBER
                 setText(binding.pauseTimeValueText.text)
@@ -224,8 +213,8 @@ class MainActivity : AppCompatActivity() {
                     val value = editText.text.toString().toIntOrNull()
                     if (value != null && value > 0) {
                         preferences.edit { putInt(KEY_PAUSE_TIME, value) }
-                        binding.pauseTimeSeekBar.max = maxOf(10, value)
-                        binding.pauseTimeSeekBar.progress = value
+                        binding.pauseTimeSlider.valueTo = maxOf(10, value).toFloat()
+                        binding.pauseTimeSlider.value = value.toFloat()
                         binding.pauseTimeValueText.text = value.toString()
                     } else {
                         Toast.makeText(this, R.string.invalid_input_number, Toast.LENGTH_SHORT)
@@ -233,22 +222,23 @@ class MainActivity : AppCompatActivity() {
                     }
                 }.setNegativeButton(R.string.cancel, null).show()
         }
+        // 设置滑块提示气泡显示为整数
+        binding.pauseTimeSlider.setLabelFormatter { value -> value.toInt().toString() }
+        binding.randomPauseTimeSlider.setLabelFormatter { value -> value.toInt().toString() }
         // 绑定停顿时长滑块事件
-        binding.pauseTimeSeekBar.setOnSeekBarChangeListener(object :
-            SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                binding.pauseTimeValueText.text = progress.toString()
+        binding.pauseTimeSlider.addOnChangeListener { _, value, fromUser ->
+            val progress = value.toInt()
+            binding.pauseTimeValueText.text = progress.toString()
+            if (fromUser) {
                 preferences.edit { putInt(KEY_PAUSE_TIME, progress) }
             }
-            override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
-            override fun onStopTrackingTouch(seekBar: SeekBar) = Unit
-        })
+        }
         // 绑定随机停顿时长范围滑块事件
         binding.randomPauseTimeSlider.addOnChangeListener { slider, _, fromUser ->
             val values = slider.values
             val min = values[0].toInt()
             val max = values[1].toInt()
-            binding.randomPauseTimeValueText.text =
+            binding.pauseTimeValueText.text =
                 getString(R.string.pause_time_range_format, min, max)
             if (fromUser) {
                 preferences.edit {
@@ -259,41 +249,29 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * 绑定速度滑块事件
-     */
+    /* 绑定速度滑块事件 */
     private fun setupSpeedControl() {
-        binding.speedSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            /**
-             * 速度变化时仅保存配置
-             *
-             * @param seekBar 当前滑块
-             * @param progress 当前进度值
-             * @param fromUser 是否由用户手势触发
-             */
-            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+        // 设置滑块提示气泡显示为整数
+        binding.speedSlider.setLabelFormatter { value -> value.toInt().toString() }
+        binding.speedSlider.addOnChangeListener { _, value, fromUser ->
+            val progress = value.toInt()
+            if (fromUser) {
                 preferences.edit { putInt(KEY_SPEED, progress) }
             }
+        }
+        binding.speedSlider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) = Unit
 
-            override fun onStartTrackingTouch(seekBar: SeekBar) = Unit
-
-            /**
-             * 结束拖动时把速度参数发送给服务
-             *
-             * @param seekBar 当前滑块
-             */
-            override fun onStopTrackingTouch(seekBar: SeekBar) {
+            override fun onStopTrackingTouch(slider: Slider) {
                 if (!isAccessibilityServicePermissionEnabled()) {
                     return
                 }
-                AutoSlideService.getInstance()?.updateSpeed(seekBar.progress)
+                AutoSlideService.getInstance()?.updateSpeed(slider.value.toInt())
             }
         })
     }
 
-    /**
-     * 设置⌈无障碍服务权限⌋开关监听器
-     */
+    /* 设置⌈无障碍服务权限⌋开关监听器 */
     private fun setupAccessibilityServicePermissionToggle() {
         binding.accessibilityServicePermissionSwitch.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked == isAccessibilityServicePermissionEnabled()) return@setOnCheckedChangeListener
@@ -305,9 +283,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * 设置⌈悬浮窗权限⌋开关监听器
-     */
+    /* 设置⌈悬浮窗权限⌋开关监听器 */
     private fun setupOverlayPermissionToggle() {
         binding.overlayPermissionSwitch.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked == Settings.canDrawOverlays(this)) return@setOnCheckedChangeListener
@@ -325,9 +301,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * 处理⌈悬浮窗权限⌋开关打开动作
-     */
+    /* 处理⌈悬浮窗权限⌋开关打开动作 */
     private fun onOverlayPermissionSwitchEnabled() {
         // Shizuku可用时直接通过Shizuku开启悬浮窗权限
         if (canUseShizuku()) {
@@ -416,9 +390,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * 处理⌈无障碍服务权限⌋开关打开动作
-     */
+    /* 处理⌈无障碍服务权限⌋开关打开动作 */
     private fun onAccessibilityServicePermissionSwitchEnabled() {
         // 有⌈写入安全设置权限⌋时直接开启⌈无障碍服务权限⌋
         if (hasWriteSecureSettingsPermission()) {
@@ -430,9 +402,7 @@ class MainActivity : AppCompatActivity() {
         showAccessibilityServicePermissionOptionDialog()
     }
 
-    /**
-     * 处理⌈无障碍服务权限⌋开关关闭动作
-     */
+    /* 处理⌈无障碍服务权限⌋开关关闭动作 */
     private fun onAccessibilityServicePermissionSwitchDisabled() {
         if (!isAccessibilityServicePermissionEnabled()) {
             return
@@ -750,7 +720,31 @@ class MainActivity : AppCompatActivity() {
      * @param pauseMode 停顿模式
      */
     private fun updatePauseTimeVisibility(pauseMode: Int) {
-        binding.pauseTimeLayout.isVisible = pauseMode == PAUSE_MODE_FIXED
-        binding.randomPauseTimeLayout.isVisible = pauseMode == PAUSE_MODE_RANDOM
+        binding.pauseTimeContainer.isVisible = pauseMode != PAUSE_MODE_NONE
+        if (pauseMode == PAUSE_MODE_FIXED) {
+            binding.pauseTimeLabel.setText(R.string.pause_time)
+            binding.pauseTimeSlider.isVisible = true
+            binding.randomPauseTimeSlider.isVisible = false
+            // 启用下划线及点击事件
+            binding.pauseTimeValueText.paintFlags =
+                binding.pauseTimeValueText.paintFlags or Paint.UNDERLINE_TEXT_FLAG
+            binding.pauseTimeValueText.isClickable = true
+            binding.pauseTimeValueText.text = binding.pauseTimeSlider.value.toInt().toString()
+        } else if (pauseMode == PAUSE_MODE_RANDOM) {
+            binding.pauseTimeLabel.setText(R.string.random_pause_time_range)
+            binding.pauseTimeSlider.isVisible = false
+            binding.randomPauseTimeSlider.isVisible = true
+            // 禁用下划线及点击事件
+            binding.pauseTimeValueText.paintFlags =
+                binding.pauseTimeValueText.paintFlags and Paint.UNDERLINE_TEXT_FLAG.inv()
+            binding.pauseTimeValueText.isClickable = false
+            val values = binding.randomPauseTimeSlider.values
+            if (values.size >= 2) {
+                val min = values[0].toInt()
+                val max = values[1].toInt()
+                binding.pauseTimeValueText.text =
+                    getString(R.string.pause_time_range_format, min, max)
+            }
+        }
     }
 }
