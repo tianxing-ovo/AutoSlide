@@ -1,6 +1,6 @@
 {
-  "versionCode": 11,
-  "versionName": "2.0",
-  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v2.0/AutoSlide-v2.0.apk",
-  "updateLog": "1. 集成 Shizuku 授权，支持更便捷地自动开启无障碍服务\n2. 优化权限开关监听逻辑，减少重复触发并提升交互体验\n3. 支持手动输入自定义停顿时间，参数设置更灵活"
+  "versionCode": 12,
+  "versionName": "2.1",
+  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v2.1/AutoSlide-v2.1.apk",
+  "updateLog": "1. 优化横竖屏切换下自动滑动的坐标计算逻辑\n2. 增强更新检测的生命周期管理，解决潜在的内存泄露风险\n3. 增强悬浮窗在多窗口环境下的防崩溃处理，提升运行稳定性\n4. 移除 Shizuku 授权中不稳定的反射逻辑，提升高版本 Android 兼容性"
 }

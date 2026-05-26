@@ -1,7 +1,7 @@
 # 安卓自动滑动器APP [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-2.0-green)]()
+[![Version](https://img.shields.io/badge/Version-2.1-green)]()
 
 [简体中文](README.md) | [English](README.en.md)
 
@@ -24,10 +24,15 @@
 
 ## 最近更新
 
+- `v2.1`
+  - 优化横竖屏切换下自动滑动的坐标计算逻辑
+  - 增强更新检测的生命周期管理，解决潜在的内存泄露风险
+  - 增强悬浮窗在多窗口环境下的防崩溃处理，提升运行稳定性
+  - 移除 Shizuku 授权中不稳定的反射逻辑，提升高版本 Android 兼容性
 - `v2.0`
-- 集成 Shizuku 授权，支持更便捷地自动开启无障碍服务
-- 优化权限开关监听逻辑，减少重复触发并提升交互体验
-- 支持手动输入自定义停顿时间，参数设置更灵活
+  - 集成 Shizuku 授权，支持更便捷地自动开启无障碍服务
+  - 优化权限开关监听逻辑，减少重复触发并提升交互体验
+  - 支持手动输入自定义停顿时间，参数设置更灵活
 
 ## 截图展示
 

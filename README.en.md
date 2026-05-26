@@ -1,7 +1,7 @@
 # Android Auto-Slide App [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-2.0-green)]()
+[![Version](https://img.shields.io/badge/Version-2.1-green)]()
 
 [简体中文](README.md) | [English](README.en.md)
 
@@ -24,10 +24,15 @@ A simple and efficient auto-slide solution for Android devices, ideal for automa
 
 ## Recent Updates
 
+- `v2.1`
+  - Optimized swipe gesture coordinate calculation during screen orientation changes
+  - Enhanced Lifecycle management in UpdateChecker to eliminate potential memory leak risks
+  - Added robust crash prevention in FloatingWindowService for multi-window/split-screen environments
+  - Removed unstable reflection calls in Shizuku integration to boost compatibility with newer Android versions
 - `v2.0`
-- Added Shizuku authorization for more convenient automatic accessibility setup
-- Optimized permission switch handling to reduce duplicate triggers and improve interaction
-- Added support for manually entering custom pause durations for more flexible configuration
+  - Added Shizuku authorization for more convenient automatic accessibility setup
+  - Optimized permission switch handling to reduce duplicate triggers and improve interaction
+  - Added support for manually entering custom pause durations for more flexible configuration
 
 ## Screenshots
 
