@@ -13,23 +13,21 @@ import android.os.Bundle
 import android.provider.Settings
 import android.text.InputType
 import android.util.Log
-import android.view.WindowInsetsController
-import android.widget.EditText
+import android.util.TypedValue
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
-import androidx.core.graphics.toColorInt
 import androidx.core.view.isVisible
+import com.google.android.material.slider.RangeSlider
 import com.google.android.material.slider.Slider
 import com.ltx.databinding.ActivityMainBinding
 import com.ltx.service.AutoSlideService
 import com.ltx.service.FloatingWindowService
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuRemoteProcess
-import java.util.Locale
 
 /**
  * 应用主界面
@@ -55,6 +53,10 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * Shizuku命令执行结果数据类
+     *
+     * @param exitCode 命令执行退出码
+     * @param stdout 命令执行标准输出
+     * @param stderr 命令执行标准错误输出
      */
     private data class ShizukuCommandResult(
         val exitCode: Int, val stdout: String, val stderr: String
@@ -73,6 +75,8 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
                 pendingShizukuOnFailed?.invoke()
             }
+            pendingShizukuOnGranted = null
+            pendingShizukuOnFailed = null
         }
 
     /**
@@ -85,11 +89,6 @@ class MainActivity : AppCompatActivity() {
         Shizuku.addRequestPermissionResultListener(shizukuPermissionListener)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        // 设置状态栏图标颜色为深色
-        window.insetsController?.setSystemBarsAppearance(
-            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
-            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-        )
         // 初始化SharedPreferences用于本地配置存储
         preferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         restoreSettings()
@@ -118,24 +117,6 @@ class MainActivity : AppCompatActivity() {
         UpdateChecker.onHostResumed(this)
     }
 
-    /* 活动恢复时检查更新 */
-    override fun onPostResume() {
-        super.onPostResume()
-        UpdateChecker.onHostResumed(this)
-    }
-
-    /**
-     * 窗口焦点变化时检查更新
-     *
-     * @param hasFocus 是否有窗口焦点
-     */
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) {
-            UpdateChecker.onHostResumed(this)
-        }
-    }
-
     /* 活动销毁时移除Shizuku权限请求监听器 */
     override fun onDestroy() {
         super.onDestroy()
@@ -144,15 +125,10 @@ class MainActivity : AppCompatActivity() {
 
     /* 恢复上次配置 */
     private fun restoreSettings() {
-        // 恢复滑动速度
-        val speed = preferences.getInt(KEY_SPEED, DEFAULT_SPEED)
+        // 恢复滑动速度 (防越界保护)
+        val speed = preferences.getInt(KEY_SPEED, DEFAULT_SPEED).coerceIn(0, 100)
         // 恢复停顿模式
-        var pauseMode = preferences.getInt(KEY_PAUSE_MODE, -1)
-        if (pauseMode == -1) {
-            val needPause = preferences.getBoolean("needPause", false)
-            pauseMode = if (needPause) PAUSE_MODE_FIXED else PAUSE_MODE_NONE
-            preferences.edit { putInt(KEY_PAUSE_MODE, pauseMode) }
-        }
+        val pauseMode = preferences.getPauseMode()
         // 恢复停顿时间
         val pauseTime = preferences.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME).coerceAtLeast(1)
         // 恢复随机停顿时间范围
@@ -167,11 +143,13 @@ class MainActivity : AppCompatActivity() {
             PAUSE_MODE_FIXED -> binding.pauseModeToggleGroup.check(R.id.btnFixedPause)
             PAUSE_MODE_RANDOM -> binding.pauseModeToggleGroup.check(R.id.btnRandomPause)
         }
-        // 动态调整滑块最大值
+        // 动态调整固定停顿时间滑块的最大值
         binding.pauseTimeSlider.valueTo = maxOf(10, pauseTime).toFloat()
         binding.pauseTimeSlider.value = pauseTime.toFloat()
+        // 动态调整随机停顿范围滑块的最大值并排序赋值
+        binding.randomPauseTimeSlider.valueTo = maxOf(10, minPauseTime, maxPauseTime).toFloat()
         binding.randomPauseTimeSlider.values =
-            listOf(minPauseTime.toFloat(), maxPauseTime.toFloat())
+            listOf(minPauseTime.toFloat(), maxPauseTime.toFloat()).sorted()
         binding.pauseTimeSlider.setCustomThumbDrawable(R.drawable.slider_thumb_circular)
         binding.randomPauseTimeSlider.setCustomThumbDrawable(R.drawable.slider_thumb_circular)
         updatePauseTimeVisibility(pauseMode)
@@ -189,6 +167,13 @@ class MainActivity : AppCompatActivity() {
                 }
                 updatePauseTimeVisibility(pauseMode)
                 preferences.edit { putInt(KEY_PAUSE_MODE, pauseMode) }
+                // 更新停顿配置
+                AutoSlideService.getInstance()?.updatePauseConfig(
+                    pauseMode,
+                    preferences.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME),
+                    preferences.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME),
+                    preferences.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME)
+                )
             }
         }
         // 停顿时间文本绑定点击事件
@@ -197,15 +182,24 @@ class MainActivity : AppCompatActivity() {
                     KEY_PAUSE_MODE, PAUSE_MODE_NONE
                 ) != PAUSE_MODE_FIXED
             ) return@setOnClickListener
-            val editText = EditText(this).apply {
+            val textInputLayout =
+                com.google.android.material.textfield.TextInputLayout(this).apply {
+                    boxBackgroundMode =
+                        com.google.android.material.textfield.TextInputLayout.BOX_BACKGROUND_OUTLINE
+                    hint = getString(R.string.custom_pause_time)
+                }
+            val editText =
+                com.google.android.material.textfield.TextInputEditText(textInputLayout.context)
+                    .apply {
                 inputType = InputType.TYPE_CLASS_NUMBER
                 setText(binding.pauseTimeValueText.text)
-                setSelection(text.length)
+                        setSelection(text?.length ?: 0)
             }
+            textInputLayout.addView(editText)
             val padding = (24 * resources.displayMetrics.density).toInt()
             val container = FrameLayout(this).apply {
-                setPadding(padding, padding / 3, padding, padding / 3)
-                addView(editText)
+                setPadding(padding, padding / 2, padding, padding / 3)
+                addView(textInputLayout)
             }
             // 显示自定义停顿时间对话框
             AlertDialog.Builder(this).setTitle(R.string.custom_pause_time).setView(container)
@@ -216,6 +210,13 @@ class MainActivity : AppCompatActivity() {
                         binding.pauseTimeSlider.valueTo = maxOf(10, value).toFloat()
                         binding.pauseTimeSlider.value = value.toFloat()
                         binding.pauseTimeValueText.text = value.toString()
+                        // 更新停顿配置
+                        AutoSlideService.getInstance()?.updatePauseConfig(
+                            preferences.getPauseMode(),
+                            value,
+                            preferences.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME),
+                            preferences.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME)
+                        )
                     } else {
                         Toast.makeText(this, R.string.invalid_input_number, Toast.LENGTH_SHORT)
                             .show()
@@ -247,6 +248,34 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        // 绑定停顿时长滑块触摸松开事件
+        binding.pauseTimeSlider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) = Unit
+            override fun onStopTrackingTouch(slider: Slider) {
+                AutoSlideService.getInstance()?.updatePauseConfig(
+                    preferences.getPauseMode(),
+                    slider.value.toInt(),
+                    preferences.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME),
+                    preferences.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME)
+                )
+            }
+        })
+        // 绑定随机停顿时长范围滑块触摸松开事件
+        binding.randomPauseTimeSlider.addOnSliderTouchListener(object :
+            RangeSlider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: RangeSlider) = Unit
+            override fun onStopTrackingTouch(slider: RangeSlider) {
+                val values = slider.values
+                val min = values[0].toInt()
+                val max = values[1].toInt()
+                AutoSlideService.getInstance()?.updatePauseConfig(
+                    preferences.getPauseMode(),
+                    preferences.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME),
+                    min,
+                    max
+                )
+            }
+        })
     }
 
     /* 绑定速度滑块事件 */
@@ -334,60 +363,38 @@ class MainActivity : AppCompatActivity() {
 
     /* 通过Shizuku授权悬浮窗权限 */
     private fun grantOverlayPermissionViaShizuku() {
-        try {
-            val result = executeShizukuCommand(
-                "appops", "set", packageName, "SYSTEM_ALERT_WINDOW", "allow"
-            )
-            if (result.exitCode != 0) {
-                Log.e(
-                    TAG,
-                    "Shizuku overlay grant failed with exitCode=${result.exitCode}, stdout=${result.stdout}, stderr=${result.stderr}"
-                )
-                Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
-                binding.overlayPermissionSwitch.isChecked = false
-                return
-            }
-            binding.overlayPermissionSwitch.post {
-                if (Settings.canDrawOverlays(this)) {
-                    binding.overlayPermissionSwitch.isChecked = true
-                    Toast.makeText(this, R.string.overlay_permission_enabled, Toast.LENGTH_SHORT).show()
-                } else {
-                    Log.e(TAG, "Overlay permission still missing after Shizuku grant")
-                    Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
-                    binding.overlayPermissionSwitch.isChecked = false
+        runShizukuCommand(
+            command = arrayOf("appops", "set", packageName, "SYSTEM_ALERT_WINDOW", "allow"),
+            onSuccess = {
+                binding.overlayPermissionSwitch.post {
+                    if (Settings.canDrawOverlays(this)) {
+                        binding.overlayPermissionSwitch.isChecked = true
+                        Toast.makeText(
+                            this, R.string.overlay_permission_enabled, Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        Log.e(TAG, "Overlay permission still missing after Shizuku grant")
+                        Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT)
+                            .show()
+                        binding.overlayPermissionSwitch.isChecked = false
+                    }
                 }
-            }
-        } catch (exception: Exception) {
-            Log.e(TAG, "Shizuku overlay grant execution failed", exception)
-            Toast.makeText(this, R.string.shizuku_exception, Toast.LENGTH_SHORT).show()
-            binding.overlayPermissionSwitch.isChecked = false
-        }
+            },
+            onFailure = { binding.overlayPermissionSwitch.isChecked = false })
     }
 
     /* 通过Shizuku撤销悬浮窗权限 */
     private fun revokeOverlayPermissionViaShizuku() {
-        try {
-            val result = executeShizukuCommand(
-                "appops", "set", packageName, "SYSTEM_ALERT_WINDOW", "deny"
-            )
-            if (result.exitCode != 0) {
-                Log.e(
-                    TAG,
-                    "Shizuku overlay revoke failed with exitCode=${result.exitCode}, stdout=${result.stdout}, stderr=${result.stderr}"
-                )
-                Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
-                binding.overlayPermissionSwitch.isChecked = true
-                return
-            }
-            binding.overlayPermissionSwitch.post {
-                binding.overlayPermissionSwitch.isChecked = Settings.canDrawOverlays(this)
-                Toast.makeText(this, R.string.overlay_permission_disabled, Toast.LENGTH_SHORT).show()
-            }
-        } catch (exception: Exception) {
-            Log.e(TAG, "Shizuku overlay revoke execution failed", exception)
-            Toast.makeText(this, R.string.shizuku_exception, Toast.LENGTH_SHORT).show()
-            binding.overlayPermissionSwitch.isChecked = true
-        }
+        runShizukuCommand(
+            command = arrayOf("appops", "set", packageName, "SYSTEM_ALERT_WINDOW", "deny"),
+            onSuccess = {
+                binding.overlayPermissionSwitch.post {
+                    binding.overlayPermissionSwitch.isChecked = Settings.canDrawOverlays(this)
+                    Toast.makeText(this, R.string.overlay_permission_disabled, Toast.LENGTH_SHORT)
+                        .show()
+                }
+            },
+            onFailure = { binding.overlayPermissionSwitch.isChecked = true })
     }
 
     /* 处理⌈无障碍服务权限⌋开关打开动作 */
@@ -482,41 +489,60 @@ class MainActivity : AppCompatActivity() {
 
     /* 通过Shizuku授权⌈写入安全设置⌋权限 */
     private fun grantPermissionViaShizuku() {
-        try {
-            val result = executeShizukuCommand(
+        runShizukuCommand(
+            command = arrayOf(
                 "/system/bin/pm", "grant", packageName, Manifest.permission.WRITE_SECURE_SETTINGS
-            )
-            if (result.exitCode != 0) {
-                Log.e(
-                    TAG,
-                    "Shizuku grant failed with exitCode=${result.exitCode}, stdout=${result.stdout}, stderr=${result.stderr}"
-                )
-                Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
-                binding.accessibilityServicePermissionSwitch.isChecked = false
-                return
-            }
+            ), onSuccess = {
             binding.accessibilityServicePermissionSwitch.post {
                 if (hasWriteSecureSettingsPermission()) {
                     changeAccessibilityServicePermissionState(enable = true)
-                    Toast.makeText(this, R.string.accessibility_service_enabled, Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(
+                        this, R.string.accessibility_service_enabled, Toast.LENGTH_SHORT
+                    ).show()
                 } else {
                     Log.e(TAG, "WRITE_SECURE_SETTINGS still missing after Shizuku grant")
                     Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
                     binding.accessibilityServicePermissionSwitch.isChecked = false
                 }
             }
+            }, onFailure = { binding.accessibilityServicePermissionSwitch.isChecked = false })
+    }
+
+    /**
+     * 执行Shizuku命令
+     *
+     * @param command 要执行的命令数组
+     * @param onSuccess 命令执行成功时的回调
+     * @param onFailure 命令执行失败时的回调
+     */
+    private fun runShizukuCommand(
+        command: Array<String>, onSuccess: () -> Unit, onFailure: () -> Unit
+    ) {
+        try {
+            val result = executeShizukuCommand(*command)
+            if (result.exitCode != 0) {
+                Log.e(
+                    TAG,
+                    "Shizuku command failed: cmd=${command.joinToString(" ")}, exitCode=${result.exitCode}, stdout=${result.stdout}, stderr=${result.stderr}"
+                )
+                Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
+                onFailure()
+                return
+            }
+            onSuccess()
         } catch (exception: Exception) {
-            Log.e(TAG, "Shizuku grant execution failed", exception)
+            Log.e(
+                TAG, "Shizuku command execution failed: cmd=${command.joinToString(" ")}", exception
+            )
             Toast.makeText(this, R.string.shizuku_exception, Toast.LENGTH_SHORT).show()
-            binding.accessibilityServicePermissionSwitch.isChecked = false
+            onFailure()
         }
     }
 
     /**
      * 执行Shizuku命令
      *
-     * @param command 要执行的命令
+     * @param command 要执行的命令数组
      * @return 命令执行结果
      */
     private fun executeShizukuCommand(vararg command: String): ShizukuCommandResult {
@@ -579,6 +605,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * 从主题中获取颜色
+     *
+     * @param attrId 属性ID
+     * @return 颜色
+     */
+    private fun getColorFromAttr(attrId: Int): Int {
+        val typedValue = TypedValue()
+        theme.resolveAttribute(attrId, typedValue, true)
+        return typedValue.data
+    }
+
+    /**
      * 构造ADB指令展示视图
      *
      * @param command 需要展示的ADB命令
@@ -587,6 +625,10 @@ class MainActivity : AppCompatActivity() {
     private fun createAdbDialogContent(command: String): LinearLayout {
         val padding = (24 * resources.displayMetrics.density).toInt()
         val codePadding = (12 * resources.displayMetrics.density).toInt()
+        val textColorPrimary = getColorFromAttr(android.R.attr.textColorPrimary)
+        val textColorSecondary = getColorFromAttr(android.R.attr.textColorSecondary)
+        val colorSurfaceVariant =
+            getColorFromAttr(com.google.android.material.R.attr.colorSurfaceVariant)
         // 提示用户连接电脑并在终端运行以下ADB命令
         return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -595,17 +637,17 @@ class MainActivity : AppCompatActivity() {
                 TextView(this@MainActivity).apply {
                     setText(R.string.adb_command_instruction)
                     textSize = 16f
-                    setTextColor("#1f1f1f".toColorInt())
+                    setTextColor(textColorPrimary)
                 })
             // 展示ADB命令
             addView(
                 TextView(this@MainActivity).apply {
                     text = command
                     typeface = Typeface.MONOSPACE
-                    setBackgroundColor("#F5F5F5".toColorInt())
+                    setBackgroundColor(colorSurfaceVariant)
                     setPadding(codePadding, codePadding, codePadding, codePadding)
                     textSize = 13f
-                    setTextColor("#333333".toColorInt())
+                    setTextColor(textColorSecondary)
                     setTextIsSelectable(true)
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
@@ -631,10 +673,13 @@ class MainActivity : AppCompatActivity() {
     /* 打开系统⌈无障碍⌋设置页并定位到当前服务 */
     private fun openAppAccessibilitySettings() {
         val serviceName = "$packageName/${AutoSlideService::class.java.canonicalName}"
+        val bundle = Bundle().apply {
+            putString(":settings:fragment_args_key", serviceName)
+        }
         val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             putExtra(":settings:fragment_args_key", serviceName)
-            putExtra(":settings:show_fragment_args", extras)
+            putExtra(":settings:show_fragment_args", bundle)
         }
         startActivity(intent)
     }
@@ -645,23 +690,17 @@ class MainActivity : AppCompatActivity() {
      * @return ⌈无障碍服务权限⌋是否已启用
      */
     private fun isAccessibilityServicePermissionEnabled(): Boolean {
-        // 获取⌈无障碍服务权限⌋是否已启用状态
-        val accessibilityEnabled = runCatching {
+        val enabled = runCatching {
             Settings.Secure.getInt(contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED)
-        }.getOrElse {
+        }.getOrDefault(0)
+        if (enabled != 1) {
             return false
         }
-        // 检查⌈无障碍服务权限⌋是否已启用
-        if (accessibilityEnabled != 1) {
-            return false
-        }
-        // 获取已启用的⌈无障碍服务权限⌋列表
-        val enabledServices = Settings.Secure.getString(
+        val services = Settings.Secure.getString(
             contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
         ) ?: return false
-        // 检查⌈无障碍服务权限⌋列表是否包含当前应用
-        val packageNameLower = packageName.lowercase(Locale.ROOT)
-        return enabledServices.lowercase(Locale.ROOT).contains(packageNameLower)
+        val serviceName = "$packageName/${AutoSlideService::class.java.canonicalName}"
+        return services.split(":").any { it.trim().equals(serviceName, ignoreCase = true) }
     }
 
     /* 绑定⌈开始⌋按钮点击事件并执行运行前权限校验 */

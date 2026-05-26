@@ -22,7 +22,7 @@
             android:layout_margin="4dp"
             android:contentDescription="@string/desc_slide_up"
             android:src="@android:drawable/arrow_up_float"
-            app:backgroundTint="#4CAF50"
+            app:backgroundTint="@color/floating_btn_bg"
             app:fabSize="mini"
             tools:ignore="ImageContrastCheck,ClassNameCheck" />
 
@@ -39,7 +39,7 @@
                 android:layout_margin="4dp"
                 android:contentDescription="@string/desc_slide_left"
                 android:src="@android:drawable/ic_media_previous"
-                app:backgroundTint="#4CAF50"
+                app:backgroundTint="@color/floating_btn_bg"
                 app:fabSize="mini"
                 tools:ignore="ImageContrastCheck,ClassNameCheck" />
 
@@ -51,7 +51,7 @@
                 android:layout_margin="4dp"
                 android:contentDescription="@string/desc_settings"
                 android:src="@android:drawable/ic_menu_preferences"
-                app:backgroundTint="#4CAF50"
+                app:backgroundTint="@color/floating_btn_bg"
                 app:fabSize="mini"
                 tools:ignore="ImageContrastCheck,ClassNameCheck" />
 
@@ -62,7 +62,7 @@
                 android:layout_margin="4dp"
                 android:contentDescription="@string/desc_slide_right"
                 android:src="@android:drawable/ic_media_next"
-                app:backgroundTint="#4CAF50"
+                app:backgroundTint="@color/floating_btn_bg"
                 app:fabSize="mini"
                 tools:ignore="ImageContrastCheck,ClassNameCheck" />
         </LinearLayout>
@@ -75,7 +75,7 @@
             android:layout_margin="4dp"
             android:contentDescription="@string/desc_slide_down"
             android:src="@android:drawable/arrow_down_float"
-            app:backgroundTint="#4CAF50"
+            app:backgroundTint="@color/floating_btn_bg"
             app:fabSize="mini"
             tools:ignore="ImageContrastCheck,ClassNameCheck" />
 
@@ -87,7 +87,7 @@
             android:layout_margin="4dp"
             android:contentDescription="@string/desc_close"
             android:src="@android:drawable/ic_menu_close_clear_cancel"
-            app:backgroundTint="#4CAF50"
+            app:backgroundTint="@color/floating_btn_bg"
             app:fabSize="mini"
             tools:ignore="ImageContrastCheck,ClassNameCheck" />
 
@@ -102,7 +102,7 @@
         android:contentDescription="@string/desc_expand"
         android:src="@android:drawable/ic_input_add"
         android:visibility="gone"
-        app:backgroundTint="#4CAF50"
+        app:backgroundTint="@color/floating_btn_bg"
         app:fabSize="mini"
         tools:ignore="ImageContrastCheck" />
 

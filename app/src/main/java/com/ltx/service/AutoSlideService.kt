@@ -13,9 +13,25 @@ import android.os.Handler
 import android.os.Looper
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
+import androidx.core.content.ContextCompat
+import com.ltx.DEFAULT_MAX_PAUSE_TIME
+import com.ltx.DEFAULT_MIN_PAUSE_TIME
+import com.ltx.DEFAULT_PAUSE_TIME
+import com.ltx.DEFAULT_SPEED
+import com.ltx.DIRECTION_DOWN
+import com.ltx.DIRECTION_LEFT
+import com.ltx.DIRECTION_RIGHT
+import com.ltx.DIRECTION_UP
+import com.ltx.KEY_MAX_PAUSE_TIME
+import com.ltx.KEY_MIN_PAUSE_TIME
+import com.ltx.KEY_PAUSE_MODE
+import com.ltx.KEY_PAUSE_TIME
+import com.ltx.KEY_SPEED
+import com.ltx.PAUSE_MODE_FIXED
+import com.ltx.PAUSE_MODE_NONE
+import com.ltx.PAUSE_MODE_RANDOM
 import kotlin.math.ln
 import kotlin.math.roundToLong
-import com.ltx.*
 
 /**
  * 自动滑动无障碍服务
@@ -27,8 +43,6 @@ class AutoSlideService : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
     private var isScreenOffReceiverRegistered = false
-    private var screenWidth = 0
-    private var screenHeight = 0
     private var speed = DEFAULT_SPEED
     private var pauseMode = PAUSE_MODE_NONE
     private var pauseTime = DEFAULT_PAUSE_TIME
@@ -76,6 +90,9 @@ class AutoSlideService : AccessibilityService() {
          */
         @JvmStatic
         fun getInstance(): AutoSlideService? = instance
+
+        /* 强制停止滑动回调 */
+        var onForceStopListener: (() -> Unit)? = null
     }
 
     /**
@@ -108,6 +125,28 @@ class AutoSlideService : AccessibilityService() {
     }
 
     /**
+     * 更新停顿配置参数
+     *
+     * @param mode 停顿模式
+     * @param time 固定停顿时间
+     * @param min 随机停顿下限
+     * @param max 随机停顿上限
+     */
+    fun updatePauseConfig(mode: Int, time: Int, min: Int, max: Int) {
+        pauseMode = mode
+        pauseTime = time.coerceAtLeast(1)
+        minPauseTime = min.coerceAtLeast(1)
+        maxPauseTime = max.coerceAtLeast(1)
+        if (!isRunning) {
+            return
+        }
+        handler.removeCallbacks(slideRunnable)
+        handler.postDelayed(
+            slideRunnable, calculateGestureDurationMillis() + calculatePauseDelayMillis()
+        )
+    }
+
+    /**
      * 接收外部启动参数并开始自动滑动
      *
      * @param intent 启动参数(包含速度与停顿配置)
@@ -116,21 +155,17 @@ class AutoSlideService : AccessibilityService() {
      * @return 固定返回START_STICKY
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        intent?.let {
-            updateConfigFromIntent(it)
+        intent?.run {
+            updateConfigFromIntent(this)
             startAutoSlide()
         }
         return START_STICKY
     }
 
-    /**
-     * 服务连接完成后初始化屏幕参数并注册单例
-     */
+    /* 服务连接完成后初始化屏幕参数并注册单例 */
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
-        screenWidth = resources.displayMetrics.widthPixels
-        screenHeight = resources.displayMetrics.heightPixels
         // 请求按键过滤能力(用于音量键强制停止滑动)
         serviceInfo = serviceInfo.apply {
             flags = flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
@@ -181,32 +216,27 @@ class AutoSlideService : AccessibilityService() {
         return true
     }
 
-    /**
-     * 强制停止滑动并恢复悬浮窗面板
-     */
+    /* 强制停止滑动并恢复悬浮窗面板 */
     private fun forceStop() {
         stopSlide()
-        sendBroadcast(
-            Intent(ACTION_EXPAND_FROM_FORCE_STOP).apply {
-                `package` = packageName
-            }
-        )
+        onForceStopListener?.invoke()
     }
 
-    /**
-     * 注册息屏广播
-     */
+    /* 注册息屏广播 */
     private fun registerScreenOffReceiver() {
         if (isScreenOffReceiverRegistered) {
             return
         }
-        registerReceiver(screenOffReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
+        ContextCompat.registerReceiver(
+            this,
+            screenOffReceiver,
+            IntentFilter(Intent.ACTION_SCREEN_OFF),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
         isScreenOffReceiverRegistered = true
     }
 
-    /**
-     * 注销息屏广播
-     */
+    /* 注销息屏广播 */
     private fun unregisterScreenOffReceiver() {
         if (!isScreenOffReceiverRegistered) {
             return
@@ -215,7 +245,7 @@ class AutoSlideService : AccessibilityService() {
         isScreenOffReceiverRegistered = false
     }
 
-    /* 滑动坐标数据类 */
+    /* 滑动起止坐标数据类 */
     private data class SlideCoordinates(
         val startX: Float, val startY: Float, val endX: Float, val endY: Float
     )
@@ -227,14 +257,16 @@ class AutoSlideService : AccessibilityService() {
      * @return 起止坐标
      */
     private fun getSlideCoordinates(direction: String): SlideCoordinates {
-        val centerX = screenWidth / 2f
-        val centerY = screenHeight / 2f
+        val width = resources.displayMetrics.widthPixels
+        val height = resources.displayMetrics.heightPixels
+        val centerX = width / 2f
+        val centerY = height / 2f
         return when (direction) {
-            DIRECTION_UP -> SlideCoordinates(centerX, screenHeight * 0.2f, centerX, screenHeight * 0.8f)
-            DIRECTION_DOWN -> SlideCoordinates(centerX, screenHeight * 0.8f, centerX, screenHeight * 0.2f)
-            DIRECTION_LEFT -> SlideCoordinates(screenWidth * 0.1f, centerY, screenWidth * 0.9f, centerY)
-            DIRECTION_RIGHT -> SlideCoordinates(screenWidth * 0.9f, centerY, screenWidth * 0.1f, centerY)
-            else -> SlideCoordinates(screenWidth * 0.1f, centerY, screenWidth * 0.9f, centerY)
+            DIRECTION_UP -> SlideCoordinates(centerX, height * 0.2f, centerX, height * 0.8f)
+            DIRECTION_DOWN -> SlideCoordinates(centerX, height * 0.8f, centerX, height * 0.2f)
+            DIRECTION_LEFT -> SlideCoordinates(width * 0.1f, centerY, width * 0.9f, centerY)
+            DIRECTION_RIGHT -> SlideCoordinates(width * 0.9f, centerY, width * 0.1f, centerY)
+            else -> SlideCoordinates(width * 0.1f, centerY, width * 0.9f, centerY)
         }
     }
 
@@ -251,9 +283,7 @@ class AutoSlideService : AccessibilityService() {
         maxPauseTime = intent.getIntExtra(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME).coerceAtLeast(1)
     }
 
-    /**
-     * 启动自动滑动循环
-     */
+    /* 启动自动滑动循环 */
     private fun startAutoSlide() {
         isRunning = true
         handler.removeCallbacks(slideRunnable)
@@ -267,8 +297,8 @@ class AutoSlideService : AccessibilityService() {
      * @param durationMillis 手势持续时间(毫秒)
      */
     private fun performSlideByDirection(durationMillis: Long) {
-        val coordinates = getSlideCoordinates(currentDirection)
-        dispatchLineGesture(coordinates.startX, coordinates.startY, coordinates.endX, coordinates.endY, durationMillis)
+        val (startX, startY, endX, endY) = getSlideCoordinates(currentDirection)
+        dispatchLineGesture(startX, startY, endX, endY, durationMillis)
     }
 
     /**
@@ -289,17 +319,16 @@ class AutoSlideService : AccessibilityService() {
      *
      * @return 停顿时间(毫秒)
      */
-    private fun calculatePauseDelayMillis(): Long {
-        if (pauseMode == PAUSE_MODE_FIXED) {
-            return pauseTime.coerceAtLeast(0) * 1000L
-        } else if (pauseMode == PAUSE_MODE_RANDOM) {
+    private fun calculatePauseDelayMillis(): Long = when (pauseMode) {
+        PAUSE_MODE_FIXED -> pauseTime.coerceAtLeast(0) * 1000L
+        PAUSE_MODE_RANDOM -> {
             val minMs = minPauseTime.coerceAtLeast(0) * 1000L
             val maxMs = maxPauseTime.coerceAtLeast(0) * 1000L
-            val actualMinMs = minOf(minMs, maxMs)
-            val actualMaxMs = maxOf(minMs, maxMs)
-            return if (actualMinMs == actualMaxMs) actualMinMs else (actualMinMs..actualMaxMs).random()
+            val (lo, hi) = minOf(minMs, maxMs) to maxOf(minMs, maxMs)
+            if (lo == hi) lo else (lo..hi).random()
         }
-        return NO_PAUSE_GAP_MS
+
+        else -> NO_PAUSE_GAP_MS
     }
 
     /**

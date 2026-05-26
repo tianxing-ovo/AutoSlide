@@ -20,12 +20,13 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.lang.ref.WeakReference
 import java.net.HttpURLConnection
-import java.net.URL
 import java.util.concurrent.Executors
 
 /**
@@ -46,6 +47,7 @@ object UpdateChecker {
     private var pendingUpdateInfo: UpdateInfo? = null
     private var updateDialog: AlertDialog? = null
     private var currentDownloadId: Long = -1
+    private var downloadReceiver: BroadcastReceiver? = null
 
     /**
      * 开始检查更新
@@ -57,11 +59,14 @@ object UpdateChecker {
         if (showToastOnLatest) {
             Toast.makeText(activity, R.string.checking_update, Toast.LENGTH_SHORT).show()
         }
+        val activityRef = WeakReference(activity)
+        val appContext = activity.applicationContext
         // 异步请求远端JSON文件
         executor.execute {
+            var connection: HttpURLConnection? = null
             try {
-                val url = URL(UPDATE_INFO_URL)
-                val connection = url.openConnection() as HttpURLConnection
+                val url = java.net.URI.create(UPDATE_INFO_URL).toURL()
+                connection = url.openConnection() as HttpURLConnection
                 connection.requestMethod = "GET"
                 connection.connectTimeout = 5000
                 connection.readTimeout = 5000
@@ -84,9 +89,13 @@ object UpdateChecker {
                     val downloadUrl = jsonObject.optString("downloadUrl", "")
                     val updateLog = jsonObject.optString("updateLog", "")
                     // 获取本地版本号
-                    val localVersionCode = getLocalVersionCode(activity)
+                    val localVersionCode = getLocalVersionCode(appContext)
                     // 对比版本号并显示对话框
                     mainHandler.post {
+                        val act = activityRef.get()
+                        if (act == null || act.isFinishing || act.isDestroyed) {
+                            return@post
+                        }
                         if (remoteVersionCode > localVersionCode) {
                             Log.d(
                                 TAG,
@@ -97,18 +106,22 @@ object UpdateChecker {
                                 updateLog = updateLog,
                                 downloadUrl = downloadUrl
                             )
-                            tryShowPendingUpdateDialog(activity)
+                            tryShowPendingUpdateDialog(act)
                         } else if (showToastOnLatest) {
                             Toast.makeText(
-                                activity, R.string.already_latest_version, Toast.LENGTH_SHORT
+                                act, R.string.already_latest_version, Toast.LENGTH_SHORT
                             ).show()
                         }
                     }
                 } else {
                     mainHandler.post {
+                        val act = activityRef.get()
+                        if (act == null || act.isFinishing || act.isDestroyed) {
+                            return@post
+                        }
                         if (showToastOnLatest) {
                             Toast.makeText(
-                                activity, R.string.check_update_failed, Toast.LENGTH_SHORT
+                                act, R.string.check_update_failed, Toast.LENGTH_SHORT
                             ).show()
                         }
                     }
@@ -116,11 +129,17 @@ object UpdateChecker {
             } catch (e: Exception) {
                 e.printStackTrace()
                 mainHandler.post {
+                    val act = activityRef.get()
+                    if (act == null || act.isFinishing || act.isDestroyed) {
+                        return@post
+                    }
                     if (showToastOnLatest) {
-                        Toast.makeText(activity, R.string.check_update_failed, Toast.LENGTH_SHORT)
+                        Toast.makeText(act, R.string.check_update_failed, Toast.LENGTH_SHORT)
                             .show()
                     }
                 }
+            } finally {
+                connection?.disconnect()
             }
         }
     }
@@ -165,6 +184,18 @@ object UpdateChecker {
                 }).setPositiveButton(R.string.update_now, null)
             .setNegativeButton(R.string.cancel, null).setCancelable(false).create().also { dialog ->
                 val shownAt = SystemClock.elapsedRealtime()
+                val lifecycleObserver = object : LifecycleEventObserver {
+                    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+                        if (event == Lifecycle.Event.ON_DESTROY) {
+                            dialog.dismiss()
+                            if (updateDialog == dialog) {
+                                updateDialog = null
+                            }
+                            source.lifecycle.removeObserver(this)
+                        }
+                    }
+                }
+                lifecycleOwner?.lifecycle?.addObserver(lifecycleObserver)
                 dialog.setCanceledOnTouchOutside(false)
                 dialog.setOnShowListener {
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
@@ -188,6 +219,7 @@ object UpdateChecker {
                     }
                 }
                 dialog.setOnDismissListener {
+                    lifecycleOwner?.lifecycle?.removeObserver(lifecycleObserver)
                     updateDialog = null
                     Log.d(TAG, "dialog dismissed, pending=${pendingUpdateInfo != null}")
                     if (pendingUpdateInfo != null && !activity.isFinishing && !activity.isDestroyed) {
@@ -228,29 +260,47 @@ object UpdateChecker {
         val downloadManager = activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         currentDownloadId = downloadManager.enqueue(request)
         Toast.makeText(activity, R.string.downloading_update, Toast.LENGTH_SHORT).show()
-        // 注册下载完成广播接收器
+        // 使用ApplicationContext注册/注销广播接收器
+        val appContext = activity.applicationContext
+        // 注销下载广播接收器
+        downloadReceiver?.let {
+            try {
+                appContext.unregisterReceiver(it)
+            } catch (_: Exception) {
+            }
+        }
+        // 创建下载完成广播接收器
         val receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 val id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1)
                 if (id == currentDownloadId) {
-                    activity.unregisterReceiver(this)
-                    installApk(activity, downloadManager, id)
+                    try {
+                        appContext.unregisterReceiver(this)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                    if (downloadReceiver == this) {
+                        downloadReceiver = null
+                    }
+                    installApk(context, downloadManager, id)
                 }
             }
         }
-        // 注册下载完成广播
+        downloadReceiver = receiver
         val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-        ContextCompat.registerReceiver(activity, receiver, filter, ContextCompat.RECEIVER_EXPORTED)
+        ContextCompat.registerReceiver(
+            appContext, receiver, filter, ContextCompat.RECEIVER_EXPORTED
+        )
     }
 
     /**
      * 安装已下载的APK文件
      *
-     * @param activity 活动
+     * @param context 上下文
      * @param downloadManager 下载管理器
      * @param downloadId 下载ID
      */
-    private fun installApk(activity: Activity, downloadManager: DownloadManager, downloadId: Long) {
+    private fun installApk(context: Context, downloadManager: DownloadManager, downloadId: Long) {
         val uri = downloadManager.getUriForDownloadedFile(downloadId)
         if (uri != null) {
             val intent = Intent(Intent.ACTION_VIEW).apply {
@@ -258,26 +308,31 @@ object UpdateChecker {
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            activity.startActivity(intent)
+            try {
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(context, R.string.download_failed, Toast.LENGTH_SHORT).show()
+            }
         } else {
-            Toast.makeText(activity, R.string.download_failed, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, R.string.download_failed, Toast.LENGTH_SHORT).show()
         }
     }
 
     /**
      * 获取当前应用的版本号
      *
-     * @param activity 活动
+     * @param context 上下文
      * @return 当前应用的版本号
      */
-    private fun getLocalVersionCode(activity: Activity): Long {
+    private fun getLocalVersionCode(context: Context): Long {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            activity.packageManager.getPackageInfo(
-                activity.packageName, PackageManager.PackageInfoFlags.of(0)
+            context.packageManager.getPackageInfo(
+                context.packageName, PackageManager.PackageInfoFlags.of(0)
             ).longVersionCode
         } else {
-            @Suppress("DEPRECATION") activity.packageManager.getPackageInfo(
-                activity.packageName, 0
+            @Suppress("DEPRECATION") context.packageManager.getPackageInfo(
+                context.packageName, 0
             ).longVersionCode
         }
     }

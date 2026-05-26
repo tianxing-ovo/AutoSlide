@@ -2,22 +2,17 @@ package com.ltx.service
 
 import android.annotation.SuppressLint
 import android.app.Service
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import android.content.SharedPreferences
 import android.graphics.PixelFormat
 import android.os.IBinder
+import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import androidx.core.content.ContextCompat
-import androidx.core.content.edit
-import com.ltx.ACTION_EXPAND_FROM_FORCE_STOP
 import com.ltx.DEFAULT_MAX_PAUSE_TIME
 import com.ltx.DEFAULT_MIN_PAUSE_TIME
 import com.ltx.DEFAULT_PAUSE_TIME
@@ -34,6 +29,7 @@ import com.ltx.KEY_SPEED
 import com.ltx.MainActivity
 import com.ltx.PREFS_NAME
 import com.ltx.R
+import com.ltx.getPauseMode
 import kotlin.math.abs
 
 /**
@@ -50,32 +46,18 @@ class FloatingWindowService : Service() {
     private lateinit var expandButton: View
     private var initialX = 0f
     private var initialY = 0f
-    private var initialTouchX = 0
-    private var initialTouchY = 0
-    private var isExpandReceiverRegistered = false
+    private var initialTouchX = 0f
+    private var initialTouchY = 0f
 
-    /* 展开悬浮窗面板的广播接收器 */
-    private val expandReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action != ACTION_EXPAND_FROM_FORCE_STOP) {
-                return
-            }
-            if (!::rootView.isInitialized) {
-                return
-            }
-            rootView.post { expand(stopSlide = false) }
-        }
-    }
 
     companion object {
         private const val TOUCH_SLOP = 10f
     }
 
+    /* 绑定服务 */
     override fun onBind(intent: Intent?): IBinder? = null
-
-    /**
-     * 服务创建入口
-     */
+    
+    /* 创建服务根视图并添加到窗口管理器 */
     override fun onCreate() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
@@ -87,15 +69,30 @@ class FloatingWindowService : Service() {
         // 注册拖拽事件处理
         setupDragging()
         setupControlButtons()
-        windowManager.addView(rootView, layoutParams)
-        registerExpandReceiver()
+        // 添加悬浮窗到窗口管理器
+        try {
+            windowManager.addView(rootView, layoutParams)
+        } catch (e: WindowManager.BadTokenException) {
+            Log.e(
+                "FloatingWindowService",
+                "Failed to add floating window: overlay permission missing",
+                e
+            )
+            stopSelf()
+            return
+        }
+        // 注册自动滑动服务停止回调
+        AutoSlideService.onForceStopListener = {
+            if (::rootView.isInitialized) {
+                rootView.post { expand(stopSlide = false) }
+            }
+        }
     }
 
-    /**
-     * 服务销毁时移除悬浮窗
-     */
+    /* 服务销毁时移除悬浮窗 */
     override fun onDestroy() {
-        unregisterExpandReceiver()
+        // 移除自动滑动服务停止回调
+        AutoSlideService.onForceStopListener = null
         super.onDestroy()
         runCatching { windowManager.removeView(rootView) }
     }
@@ -130,9 +127,7 @@ class FloatingWindowService : Service() {
         }
     }
 
-    /**
-     * 注册拖拽事件处理
-     */
+    /* 注册拖拽事件处理 */
     @SuppressLint("ClickableViewAccessibility")
     private fun setupDragging() {
         val listener = View.OnTouchListener { view, event ->
@@ -166,8 +161,8 @@ class FloatingWindowService : Service() {
     private fun onTouchDown(event: MotionEvent) {
         initialX = layoutParams.x.toFloat()
         initialY = layoutParams.y.toFloat()
-        initialTouchX = event.rawX.toInt()
-        initialTouchY = event.rawY.toInt()
+        initialTouchX = event.rawX
+        initialTouchY = event.rawY
     }
 
     /**
@@ -202,9 +197,7 @@ class FloatingWindowService : Service() {
         }
     }
 
-    /**
-     * 绑定所有控制按钮事件
-     */
+    /* 绑定所有控制按钮事件 */
     private fun setupControlButtons() {
         expandButton.setOnClickListener { expand() }
         // 方向按钮点击事件绑定
@@ -239,9 +232,7 @@ class FloatingWindowService : Service() {
         }
     }
 
-    /**
-     * 最小化悬浮窗
-     */
+    /* 最小化悬浮窗 */
     private fun minimize() {
         controlPanel.visibility = View.GONE
         expandButton.visibility = View.VISIBLE
@@ -262,50 +253,14 @@ class FloatingWindowService : Service() {
         }
     }
 
-    /**
-     * 注册展开悬浮窗面板的广播接收器
-     */
-    private fun registerExpandReceiver() {
-        if (isExpandReceiverRegistered) {
-            return
-        }
-        ContextCompat.registerReceiver(
-            this,
-            expandReceiver,
-            IntentFilter(ACTION_EXPAND_FROM_FORCE_STOP),
-            ContextCompat.RECEIVER_NOT_EXPORTED
-        )
-        isExpandReceiverRegistered = true
-    }
-
-    /**
-     * 注销展开悬浮窗面板的广播接收器
-     */
-    private fun unregisterExpandReceiver() {
-        if (!isExpandReceiverRegistered) {
-            return
-        }
-        runCatching { unregisterReceiver(expandReceiver) }
-        isExpandReceiverRegistered = false
-    }
-
-    /**
-     * 启动自动滑动服务
-     *
-     */
+    /* 启动自动滑动服务 */
     private fun startSlide() {
         minimize()
         // 从本地配置文件读取当前设置
-        val prefs: SharedPreferences = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         val intent = Intent(this, AutoSlideService::class.java).apply {
             putExtra(KEY_SPEED, prefs.getInt(KEY_SPEED, DEFAULT_SPEED))
-            var pauseMode = prefs.getInt(KEY_PAUSE_MODE, -1)
-            if (pauseMode == -1) {
-                val needPause = prefs.getBoolean("needPause", false)
-                pauseMode = if (needPause) 1 else 0
-                prefs.edit { putInt(KEY_PAUSE_MODE, pauseMode) }
-            }
-            putExtra(KEY_PAUSE_MODE, pauseMode)
+            putExtra(KEY_PAUSE_MODE, prefs.getPauseMode())
             putExtra(KEY_PAUSE_TIME, prefs.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME))
             putExtra(KEY_MIN_PAUSE_TIME, prefs.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME))
             putExtra(KEY_MAX_PAUSE_TIME, prefs.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME))
@@ -313,9 +268,7 @@ class FloatingWindowService : Service() {
         startService(intent)
     }
 
-    /**
-     * 返回主界面
-     */
+    /* 返回主界面 */
     private fun returnToMainActivity() {
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)

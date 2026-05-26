@@ -1,5 +1,9 @@
 package com.ltx
 
+import android.content.SharedPreferences
+import androidx.core.content.edit
+
+
 // 配置文件名
 const val PREFS_NAME = "slide_settings"
 
@@ -27,5 +31,18 @@ const val DIRECTION_DOWN = "down"
 const val DIRECTION_LEFT = "left"
 const val DIRECTION_RIGHT = "right"
 
-// 广播
-const val ACTION_EXPAND_FROM_FORCE_STOP = "com.ltx.action.EXPAND_FLOATING_FROM_FORCE_STOP"
+
+/**
+ * 获取停顿模式
+ *
+ * @return 停顿模式
+ */
+fun SharedPreferences.getPauseMode(): Int {
+    var mode = getInt(KEY_PAUSE_MODE, -1)
+    if (mode == -1) {
+        val needPause = getBoolean("needPause", false)
+        mode = if (needPause) PAUSE_MODE_FIXED else PAUSE_MODE_NONE
+        edit { putInt(KEY_PAUSE_MODE, mode) }
+    }
+    return mode
+}

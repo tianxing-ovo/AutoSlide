@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="@color/window_background"
     tools:context=".MainActivity">
 
     <!--顶部工具栏-->
@@ -17,7 +17,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:titleTextColor="@color/text_primary"
-        android:background="@color/white"
+        android:background="@color/window_background"
         android:elevation="0dp" />
 
     <!--权限设置卡片-->
@@ -272,19 +272,6 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!--控制按钮区域-->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/controlsLayout"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/margin_medium"
-        app:layout_constraintBottom_toTopOf="@id/startButton"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/settingsCard">
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
     <!--开始按钮-->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/startButton"
@@ -293,7 +280,6 @@
         android:layout_marginStart="@dimen/margin_medium"
         android:layout_marginEnd="@dimen/margin_medium"
         android:layout_marginTop="@dimen/margin_large"
-        android:backgroundTint="@color/primary"
         android:text="@string/start"
         android:textColor="@color/on_primary"
         android:textSize="18sp"
@@ -301,7 +287,7 @@
         app:cornerRadius="32dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/controlsLayout"
+        app:layout_constraintTop_toBottomOf="@id/settingsCard"
         tools:ignore="VisualLintButtonSize" />
 
     <!--检查更新按钮-->
@@ -315,13 +301,5 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/startButton" />
-
-    <!--底部导航栏-->
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottomNavigation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
