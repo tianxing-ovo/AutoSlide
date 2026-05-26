@@ -64,7 +64,7 @@
                     android:textSize="@dimen/text_size_body" />
                 <!--无障碍服务权限开关-->
                 <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/accessibilityPermissionSwitch"
+                    android:id="@+id/accessibility_service_permission_switch"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:contentDescription="@string/accessibility_service_permission_switch"

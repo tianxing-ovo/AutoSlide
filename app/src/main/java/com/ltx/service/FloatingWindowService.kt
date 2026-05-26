@@ -16,10 +16,25 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
+import com.ltx.ACTION_EXPAND_FROM_FORCE_STOP
+import com.ltx.DEFAULT_MAX_PAUSE_TIME
+import com.ltx.DEFAULT_MIN_PAUSE_TIME
+import com.ltx.DEFAULT_PAUSE_TIME
+import com.ltx.DEFAULT_SPEED
+import com.ltx.DIRECTION_DOWN
+import com.ltx.DIRECTION_LEFT
+import com.ltx.DIRECTION_RIGHT
+import com.ltx.DIRECTION_UP
+import com.ltx.KEY_MAX_PAUSE_TIME
+import com.ltx.KEY_MIN_PAUSE_TIME
+import com.ltx.KEY_PAUSE_MODE
+import com.ltx.KEY_PAUSE_TIME
+import com.ltx.KEY_SPEED
 import com.ltx.MainActivity
+import com.ltx.PREFS_NAME
 import com.ltx.R
 import kotlin.math.abs
-import androidx.core.content.edit
 
 /**
  * 悬浮窗服务
@@ -54,21 +69,6 @@ class FloatingWindowService : Service() {
 
     companion object {
         private const val TOUCH_SLOP = 10f
-        private const val PREFS_NAME = "slide_settings"
-        private const val KEY_SPEED = "speed"
-        private const val KEY_PAUSE_MODE = "pauseMode"
-        private const val KEY_PAUSE_TIME = "pauseTime"
-        private const val KEY_MIN_PAUSE_TIME = "minPauseTime"
-        private const val KEY_MAX_PAUSE_TIME = "maxPauseTime"
-        private const val DEFAULT_SPEED = 50
-        private const val DEFAULT_PAUSE_TIME = 1
-        private const val DEFAULT_MIN_PAUSE_TIME = 1
-        private const val DEFAULT_MAX_PAUSE_TIME = 3
-        private const val DIRECTION_UP = "up"
-        private const val DIRECTION_DOWN = "down"
-        private const val DIRECTION_LEFT = "left"
-        private const val DIRECTION_RIGHT = "right"
-        const val ACTION_EXPAND_FROM_FORCE_STOP = "com.ltx.action.EXPAND_FLOATING_FROM_FORCE_STOP"
     }
 
     override fun onBind(intent: Intent?): IBinder? = null

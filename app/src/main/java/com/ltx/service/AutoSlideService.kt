@@ -15,6 +15,7 @@ import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import kotlin.math.ln
 import kotlin.math.roundToLong
+import com.ltx.*
 
 /**
  * 自动滑动无障碍服务
@@ -30,9 +31,9 @@ class AutoSlideService : AccessibilityService() {
     private var screenHeight = 0
     private var speed = DEFAULT_SPEED
     private var pauseMode = PAUSE_MODE_NONE
-    private var pauseTime = DEFAULT_PAUSE_SECONDS
-    private var minPauseTime = 1
-    private var maxPauseTime = 3
+    private var pauseTime = DEFAULT_PAUSE_TIME
+    private var minPauseTime = DEFAULT_MIN_PAUSE_TIME
+    private var maxPauseTime = DEFAULT_MAX_PAUSE_TIME
     private var currentDirection = DIRECTION_LEFT
     private var isRunning = false
 
@@ -62,15 +63,6 @@ class AutoSlideService : AccessibilityService() {
     }
 
     companion object {
-        private const val DEFAULT_SPEED = 50
-        private const val DEFAULT_PAUSE_SECONDS = 1
-        const val PAUSE_MODE_NONE = 0
-        const val PAUSE_MODE_FIXED = 1
-        const val PAUSE_MODE_RANDOM = 2
-        private const val DIRECTION_UP = "up"
-        private const val DIRECTION_DOWN = "down"
-        private const val DIRECTION_LEFT = "left"
-        private const val DIRECTION_RIGHT = "right"
         private const val MIN_GESTURE_DURATION_MS = 100L
         private const val MAX_GESTURE_DURATION_MS = 900L
         private const val NO_PAUSE_GAP_MS = 80L
@@ -199,7 +191,7 @@ class AutoSlideService : AccessibilityService() {
     private fun forceStop() {
         stopSlide()
         sendBroadcast(
-            Intent(FloatingWindowService.ACTION_EXPAND_FROM_FORCE_STOP).apply {
+            Intent(ACTION_EXPAND_FROM_FORCE_STOP).apply {
                 `package` = packageName
             }
         )
@@ -297,11 +289,11 @@ class AutoSlideService : AccessibilityService() {
      * @param intent 启动参数
      */
     private fun updateConfigFromIntent(intent: Intent) {
-        speed = intent.getIntExtra("speed", DEFAULT_SPEED)
-        pauseMode = intent.getIntExtra("pauseMode", PAUSE_MODE_NONE)
-        pauseTime = intent.getIntExtra("pauseTime", DEFAULT_PAUSE_SECONDS).coerceAtLeast(1)
-        minPauseTime = intent.getIntExtra("minPauseTime", 1).coerceAtLeast(1)
-        maxPauseTime = intent.getIntExtra("maxPauseTime", 3).coerceAtLeast(1)
+        speed = intent.getIntExtra(KEY_SPEED, DEFAULT_SPEED)
+        pauseMode = intent.getIntExtra(KEY_PAUSE_MODE, PAUSE_MODE_NONE)
+        pauseTime = intent.getIntExtra(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME).coerceAtLeast(1)
+        minPauseTime = intent.getIntExtra(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME).coerceAtLeast(1)
+        maxPauseTime = intent.getIntExtra(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME).coerceAtLeast(1)
     }
 
     /**
