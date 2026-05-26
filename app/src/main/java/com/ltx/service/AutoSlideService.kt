@@ -138,9 +138,7 @@ class AutoSlideService : AccessibilityService() {
         registerScreenOffReceiver()
     }
 
-    /**
-     * 服务销毁时停止滑动并释放单例
-     */
+    /* 服务销毁时停止滑动并释放单例 */
     override fun onDestroy() {
         unregisterScreenOffReceiver()
         stopSlide()
@@ -148,9 +146,7 @@ class AutoSlideService : AccessibilityService() {
         super.onDestroy()
     }
 
-    /**
-     * 停止自动滑动循环
-     */
+    /* 停止自动滑动循环 */
     fun stopSlide() {
         if (!isRunning) {
             return
@@ -219,68 +215,27 @@ class AutoSlideService : AccessibilityService() {
         isScreenOffReceiverRegistered = false
     }
 
+    /* 滑动坐标数据类 */
+    private data class SlideCoordinates(
+        val startX: Float, val startY: Float, val endX: Float, val endY: Float
+    )
+
     /**
-     * 执行向上滑动
+     * 根据滑动方向计算滑动起止坐标
      *
-     * @param durationMillis 手势持续时间(毫秒)
+     * @param direction 滑动方向
+     * @return 起止坐标
      */
-    private fun slideUp(durationMillis: Long) {
-        // 滑动起点X坐标和终点X坐标(屏幕宽度的中心点X坐标)
+    private fun getSlideCoordinates(direction: String): SlideCoordinates {
         val centerX = screenWidth / 2f
-        // 滑动起点Y坐标(屏幕顶部20%处)
-        val startY = screenHeight * 0.2f
-        // 滑动终点Y坐标(屏幕底部80%处)
-        val endY = screenHeight * 0.8f
-        // 执行滑动手势: 从屏幕顶部20%处滑动到屏幕底部80%处
-        dispatchLineGesture(centerX, startY, centerX, endY, durationMillis)
-    }
-
-    /**
-     * 执行向下滑动
-     *
-     * @param durationMillis 手势持续时间(毫秒)
-     */
-    private fun slideDown(durationMillis: Long) {
-        // 滑动起点X坐标和终点X坐标(屏幕宽度的中心点X坐标)
-        val centerX = screenWidth / 2f
-        // 滑动起点Y坐标(屏幕底部80%处)
-        val startY = screenHeight * 0.8f
-        // 滑动终点Y坐标(屏幕顶部20%处)
-        val endY = screenHeight * 0.2f
-        // 执行滑动手势: 从屏幕底部80%处滑动到屏幕顶部20%处
-        dispatchLineGesture(centerX, startY, centerX, endY, durationMillis)
-    }
-
-    /**
-     * 执行向左滑动
-     *
-     * @param durationMillis 手势持续时间(毫秒)
-     */
-    private fun slideLeft(durationMillis: Long) {
-        // 滑动起点Y坐标和终点Y坐标(屏幕高度的中心点Y坐标)
         val centerY = screenHeight / 2f
-        // 滑动起点X坐标(屏幕左侧10%处)
-        val startX = screenWidth * 0.1f
-        // 滑动终点X坐标(屏幕右侧90%处)
-        val endX = screenWidth * 0.9f
-        // 执行滑动手势: 从屏幕左侧10%处滑动到屏幕右侧90%处
-        dispatchLineGesture(startX, centerY, endX, centerY, durationMillis)
-    }
-
-    /**
-     * 执行向右滑动
-     *
-     * @param durationMillis 手势持续时间(毫秒)
-     */
-    private fun slideRight(durationMillis: Long) {
-        // 滑动起点Y坐标和终点Y坐标(屏幕高度的中心点Y坐标)
-        val centerY = screenHeight / 2f
-        // 滑动起点X坐标(屏幕右侧90%处)
-        val startX = screenWidth * 0.9f
-        // 滑动终点X坐标(屏幕左侧10%处)
-        val endX = screenWidth * 0.1f
-        // 执行滑动手势: 从屏幕右侧90%处滑动到屏幕左侧10%处
-        dispatchLineGesture(startX, centerY, endX, centerY, durationMillis)
+        return when (direction) {
+            DIRECTION_UP -> SlideCoordinates(centerX, screenHeight * 0.2f, centerX, screenHeight * 0.8f)
+            DIRECTION_DOWN -> SlideCoordinates(centerX, screenHeight * 0.8f, centerX, screenHeight * 0.2f)
+            DIRECTION_LEFT -> SlideCoordinates(screenWidth * 0.1f, centerY, screenWidth * 0.9f, centerY)
+            DIRECTION_RIGHT -> SlideCoordinates(screenWidth * 0.9f, centerY, screenWidth * 0.1f, centerY)
+            else -> SlideCoordinates(screenWidth * 0.1f, centerY, screenWidth * 0.9f, centerY)
+        }
     }
 
     /**
@@ -312,12 +267,8 @@ class AutoSlideService : AccessibilityService() {
      * @param durationMillis 手势持续时间(毫秒)
      */
     private fun performSlideByDirection(durationMillis: Long) {
-        when (currentDirection) {
-            DIRECTION_UP -> slideUp(durationMillis)
-            DIRECTION_DOWN -> slideDown(durationMillis)
-            DIRECTION_RIGHT -> slideRight(durationMillis)
-            else -> slideLeft(durationMillis)
-        }
+        val coordinates = getSlideCoordinates(currentDirection)
+        dispatchLineGesture(coordinates.startX, coordinates.startY, coordinates.endX, coordinates.endY, durationMillis)
     }
 
     /**

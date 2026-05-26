@@ -61,14 +61,18 @@ class MainActivity : AppCompatActivity() {
         val exitCode: Int, val stdout: String, val stderr: String
     )
 
+    /* Shizuku授权待执行的回调 */
+    private var pendingShizukuOnGranted: (() -> Unit)? = null
+    private var pendingShizukuOnFailed: (() -> Unit)? = null
+
     /* Shizuku权限请求监听器 */
     private val shizukuPermissionListener =
         Shizuku.OnRequestPermissionResultListener { requestCode, grantResult ->
             if (requestCode == SHIZUKU_PERMISSION_REQUEST_CODE && grantResult == PackageManager.PERMISSION_GRANTED) {
-                grantPermissionViaShizuku()
+                pendingShizukuOnGranted?.invoke()
             } else {
                 Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
-                binding.accessibilityServicePermissionSwitch.isChecked = false
+                pendingShizukuOnFailed?.invoke()
             }
         }
 
@@ -106,6 +110,10 @@ class MainActivity : AppCompatActivity() {
         // 检查是否具备⌈写入安全设置权限⌋并且⌈无障碍服务权限⌋未启用
         if (hasWriteSecureSettingsPermission() && !isAccessibilityServicePermissionEnabled()) {
             changeAccessibilityServicePermissionState(enable = true)
+        }
+        // 检查Shizuku是否可用并且⌈悬浮窗权限⌋未启用，自动授权
+        if (!Settings.canDrawOverlays(this) && canUseShizuku()) {
+            grantOverlayPermissionViaShizuku()
         }
         binding.accessibilityServicePermissionSwitch.isChecked =
             isAccessibilityServicePermissionEnabled()
@@ -304,14 +312,107 @@ class MainActivity : AppCompatActivity() {
         binding.overlayPermissionSwitch.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked == Settings.canDrawOverlays(this)) return@setOnCheckedChangeListener
             if (isChecked) {
-                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
-                startActivity(intent)
-                binding.overlayPermissionSwitch.isChecked = false
+                onOverlayPermissionSwitchEnabled()
             } else {
-                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
-                startActivity(intent)
-                binding.overlayPermissionSwitch.isChecked = true
+                // Shizuku可用时直接关闭悬浮窗权限
+                if (canUseShizuku()) {
+                    revokeOverlayPermissionViaShizuku()
+                } else {
+                    startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
+                    binding.overlayPermissionSwitch.isChecked = true
+                }
             }
+        }
+    }
+
+    /**
+     * 处理⌈悬浮窗权限⌋开关打开动作
+     */
+    private fun onOverlayPermissionSwitchEnabled() {
+        // Shizuku可用时直接通过Shizuku开启悬浮窗权限
+        if (canUseShizuku()) {
+            grantOverlayPermissionViaShizuku()
+            return
+        }
+        // 展示⌈悬浮窗权限⌋选项弹窗
+        showOverlayPermissionOptionDialog()
+    }
+
+    /* 展示⌈悬浮窗权限⌋选项弹窗 */
+    private fun showOverlayPermissionOptionDialog() = with(AlertDialog.Builder(this)) {
+        val options = arrayOf(
+            getString(R.string.manual_enable),
+            getString(R.string.shizuku_authorization)
+        )
+        setTitle(R.string.choose_enable_method)
+        setItems(options) { _, which ->
+            when (which) {
+                OPTION_MANUAL -> startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
+                OPTION_SHIZUKU -> handleShizukuAuthorization(
+                    onGranted = { grantOverlayPermissionViaShizuku() },
+                    onFailed = { binding.overlayPermissionSwitch.isChecked = false }
+                )
+            }
+        }
+        setOnCancelListener { binding.overlayPermissionSwitch.isChecked = false }
+        show()
+    }
+
+    /* 通过Shizuku授权悬浮窗权限 */
+    private fun grantOverlayPermissionViaShizuku() {
+        try {
+            val result = executeShizukuCommand(
+                "appops", "set", packageName, "SYSTEM_ALERT_WINDOW", "allow"
+            )
+            if (result.exitCode != 0) {
+                Log.e(
+                    TAG,
+                    "Shizuku overlay grant failed with exitCode=${result.exitCode}, stdout=${result.stdout}, stderr=${result.stderr}"
+                )
+                Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
+                binding.overlayPermissionSwitch.isChecked = false
+                return
+            }
+            binding.overlayPermissionSwitch.post {
+                if (Settings.canDrawOverlays(this)) {
+                    binding.overlayPermissionSwitch.isChecked = true
+                    Toast.makeText(this, R.string.overlay_permission_enabled, Toast.LENGTH_SHORT).show()
+                } else {
+                    Log.e(TAG, "Overlay permission still missing after Shizuku grant")
+                    Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
+                    binding.overlayPermissionSwitch.isChecked = false
+                }
+            }
+        } catch (exception: Exception) {
+            Log.e(TAG, "Shizuku overlay grant execution failed", exception)
+            Toast.makeText(this, R.string.shizuku_exception, Toast.LENGTH_SHORT).show()
+            binding.overlayPermissionSwitch.isChecked = false
+        }
+    }
+
+    /* 通过Shizuku撤销悬浮窗权限 */
+    private fun revokeOverlayPermissionViaShizuku() {
+        try {
+            val result = executeShizukuCommand(
+                "appops", "set", packageName, "SYSTEM_ALERT_WINDOW", "deny"
+            )
+            if (result.exitCode != 0) {
+                Log.e(
+                    TAG,
+                    "Shizuku overlay revoke failed with exitCode=${result.exitCode}, stdout=${result.stdout}, stderr=${result.stderr}"
+                )
+                Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
+                binding.overlayPermissionSwitch.isChecked = true
+                return
+            }
+            binding.overlayPermissionSwitch.post {
+                binding.overlayPermissionSwitch.isChecked = Settings.canDrawOverlays(this)
+                Toast.makeText(this, R.string.overlay_permission_disabled, Toast.LENGTH_SHORT).show()
+            }
+        } catch (exception: Exception) {
+            Log.e(TAG, "Shizuku overlay revoke execution failed", exception)
+            Toast.makeText(this, R.string.shizuku_exception, Toast.LENGTH_SHORT).show()
+            binding.overlayPermissionSwitch.isChecked = true
         }
     }
 
@@ -360,7 +461,10 @@ class MainActivity : AppCompatActivity() {
         setItems(options) { _, which ->
                 when (which) {
                     OPTION_MANUAL -> openAppAccessibilitySettings()
-                    OPTION_SHIZUKU -> handleShizukuAuthorization()
+                    OPTION_SHIZUKU -> handleShizukuAuthorization(
+                        onGranted = { grantPermissionViaShizuku() },
+                        onFailed = { binding.accessibilityServicePermissionSwitch.isChecked = false }
+                    )
                     OPTION_ADB -> {
                         showAdbCommandDialog()
                         binding.accessibilityServicePermissionSwitch.isChecked = false
@@ -373,25 +477,36 @@ class MainActivity : AppCompatActivity() {
         show()
     }
 
-    /* 处理Shizuku授权 */
-    private fun handleShizukuAuthorization() {
+    /* 处理Shizuku授权(通用) */
+    private fun handleShizukuAuthorization(onGranted: () -> Unit, onFailed: () -> Unit) {
         // 检查Shizuku是否运行
         if (!Shizuku.pingBinder()) {
             Toast.makeText(this, R.string.shizuku_not_running, Toast.LENGTH_SHORT).show()
-            binding.accessibilityServicePermissionSwitch.isChecked = false
+            onFailed()
             return
         }
         // 检查Shizuku权限是否已授权
         if (Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED) {
-            grantPermissionViaShizuku()
+            onGranted()
         } else {
+            pendingShizukuOnGranted = onGranted
+            pendingShizukuOnFailed = onFailed
             try {
                 Shizuku.requestPermission(SHIZUKU_PERMISSION_REQUEST_CODE)
             } catch (exception: IllegalStateException) {
                 Log.e(TAG, "Failed to request Shizuku permission", exception)
                 Toast.makeText(this, R.string.shizuku_exception, Toast.LENGTH_SHORT).show()
-                binding.accessibilityServicePermissionSwitch.isChecked = false
+                onFailed()
             }
+        }
+    }
+
+    /* 检查Shizuku是否可用(运行中且已授权) */
+    private fun canUseShizuku(): Boolean {
+        return try {
+            Shizuku.pingBinder() && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+        } catch (_: Exception) {
+            false
         }
     }
 
@@ -600,13 +715,20 @@ class MainActivity : AppCompatActivity() {
             }
             // 校验悬浮窗权限
             if (!Settings.canDrawOverlays(this)) {
-                AlertDialog.Builder(this).setTitle(R.string.permission_required)
-                    .setMessage(R.string.overlay_permission_required)
-                    .setPositiveButton(R.string.go_to_open) { _, _ ->
-                        val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
-                        startActivity(intent)
-                    }.setNegativeButton(R.string.cancel, null).show()
-                return@setOnClickListener
+                // Shizuku可用时自动授权悬浮窗权限
+                if (canUseShizuku()) {
+                    grantOverlayPermissionViaShizuku()
+                    if (!Settings.canDrawOverlays(this)) {
+                        return@setOnClickListener
+                    }
+                } else {
+                    AlertDialog.Builder(this).setTitle(R.string.permission_required)
+                        .setMessage(R.string.overlay_permission_required)
+                        .setPositiveButton(R.string.go_to_open) { _, _ ->
+                            startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
+                        }.setNegativeButton(R.string.cancel, null).show()
+                    return@setOnClickListener
+                }
             }
             // 校验通过后启动悬浮窗服务并把应用退到后台
             val floatingIntent = Intent(this, FloatingWindowService::class.java)
