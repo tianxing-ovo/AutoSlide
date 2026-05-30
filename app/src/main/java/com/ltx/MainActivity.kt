@@ -86,7 +86,6 @@ class MainActivity : AppCompatActivity() {
      */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Shizuku.addRequestPermissionResultListener(shizukuPermissionListener)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         // 初始化SharedPreferences用于本地配置存储
@@ -98,22 +97,46 @@ class MainActivity : AppCompatActivity() {
         setupOverlayPermissionToggle()
         setupStartButton()
         setupUpdateButton()
+        // 注册Shizuku监听器
+        binding.root.post {
+            Shizuku.addRequestPermissionResultListener(shizukuPermissionListener)
+        }
     }
 
     /* 活动恢复时检查⌈无障碍服务权限⌋并同步开关状态 */
     override fun onResume() {
         super.onResume()
-        // 检查是否具备⌈写入安全设置权限⌋并且⌈无障碍服务权限⌋未启用
-        if (hasWriteSecureSettingsPermission() && !isAccessibilityServicePermissionEnabled()) {
-            changeAccessibilityServicePermissionState(enable = true)
-        }
-        // 检查Shizuku是否可用并且⌈悬浮窗权限⌋未启用，自动授权
-        if (!Settings.canDrawOverlays(this) && canUseShizuku()) {
-            grantOverlayPermissionViaShizuku()
-        }
-        binding.accessibilityServicePermissionSwitch.isChecked =
-            isAccessibilityServicePermissionEnabled()
-        binding.overlayPermissionSwitch.isChecked = Settings.canDrawOverlays(this)
+        // 后台线程检查权限并同步开关状态
+        Thread {
+            val hasWriteSecure = hasWriteSecureSettingsPermission()
+            val isAccessibilityEnabled = isAccessibilityServicePermissionEnabled()
+            // 有⌈写入安全设置权限⌋时直接开启⌈无障碍服务权限⌋
+            if (hasWriteSecure && !isAccessibilityEnabled) {
+                changeAccessibilityServicePermissionState(enable = true)
+            }
+            val canDrawOverlays = Settings.canDrawOverlays(this)
+            val useShizuku = canUseShizuku()
+            // Shizuku可用时自动授权悬浮窗权限
+            if (!canDrawOverlays && useShizuku) {
+                runOnUiThread {
+                    if (!isFinishing && !isDestroyed) {
+                        grantOverlayPermissionViaShizuku()
+                    }
+                }
+            }
+            // 获取最终的权限状态
+            val finalAccessibilityEnabled = isAccessibilityServicePermissionEnabled()
+            val finalCanDrawOverlays = Settings.canDrawOverlays(this)
+            // 回到主线程同步开关状态并应用无动画过渡
+            runOnUiThread {
+                if (!isFinishing && !isDestroyed) {
+                    binding.accessibilityServicePermissionSwitch.isChecked = finalAccessibilityEnabled
+                    binding.accessibilityServicePermissionSwitch.jumpDrawablesToCurrentState()
+                    binding.overlayPermissionSwitch.isChecked = finalCanDrawOverlays
+                    binding.overlayPermissionSwitch.jumpDrawablesToCurrentState()
+                }
+            }
+        }.start()
         UpdateChecker.onHostResumed(this)
     }
 
@@ -587,9 +610,13 @@ class MainActivity : AppCompatActivity() {
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
             enabledServices.joinToString(":")
         )
-        // 更新无障碍开关状态
-        binding.accessibilityServicePermissionSwitch.isChecked =
-            isAccessibilityServicePermissionEnabled()
+        // 更新无障碍服务权限开关状态
+        runOnUiThread {
+            if (!isFinishing && !isDestroyed) {
+                binding.accessibilityServicePermissionSwitch.isChecked = isAccessibilityServicePermissionEnabled()
+                binding.accessibilityServicePermissionSwitch.jumpDrawablesToCurrentState()
+            }
+        }
     }
 
     /* 显示ADB授权所需的命令弹窗 */

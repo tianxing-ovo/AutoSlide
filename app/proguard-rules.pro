@@ -5,17 +5,14 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Shizuku: 防止反射方法及跨进程Provider被混淆
+-keep class rikka.shizuku.Shizuku { *; }
+-keep class rikka.shizuku.ShizukuRemoteProcess { *; }
+-keep class rikka.shizuku.ShizukuProvider { *; }
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# 无障碍服务: 保证系统能反射实例化服务
+-keep class com.ltx.service.AutoSlideService { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# 崩溃定位: 保留源文件及行号
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile

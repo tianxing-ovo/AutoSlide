@@ -1,7 +1,7 @@
 # 安卓自动滑动器APP [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-2.1-green)]()
+[![Version](https://img.shields.io/badge/Version-2.2-green)]()
 
 [简体中文](README.md) | [English](README.en.md)
 
@@ -24,6 +24,10 @@
 
 ## 最近更新
 
+- `v2.2`
+  - 开启 R8 代码混淆与资源缩减，大幅缩小 APK 体积
+  - 延迟 Shizuku 权限监听注册，优化 APP 冷启动渲染速度
+  - 集成 GitHub 代理下载加速（ghfast.top），解决国内更新包下载缓慢问题
 - `v2.1`
   - 优化横竖屏切换下自动滑动的坐标计算逻辑
   - 增强更新检测的生命周期管理，解决潜在的内存泄露风险

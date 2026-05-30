@@ -6,7 +6,7 @@
     <color name="on_primary">#FFFFFF</color>
     <color name="surface">#EFEFF6</color>
     <color name="text_primary">#000000</color>
-    <color name="text_secondary">#5F6368</color>
+    <color name="text_secondary">#3C4043</color>
     <color name="switch_track_unchecked">#BCC0CD</color>
     <color name="floating_btn_bg">#4CAF50</color>
 </resources>

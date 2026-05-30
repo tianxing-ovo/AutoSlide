@@ -10,24 +10,25 @@ android {
     // 命名空间
     namespace = "com.ltx"
     // 编译时使用的Android SDK版本
-    compileSdk = 36
+    compileSdk = 37
     defaultConfig {
         // 应用ID: 包名
         applicationId = "com.ltx"
         // 最低支持SDK版本
         minSdk = 31
         // 目标设备的SDK版本
-        targetSdk = 36
+        targetSdk = 37
         // 版本号
-        versionCode = 12
+        versionCode = 13
         // 版本名称
-        versionName = "2.1"
+        versionName = "2.2"
         // 单元测试
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )

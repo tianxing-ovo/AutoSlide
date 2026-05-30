@@ -1,7 +1,7 @@
 # Android Auto-Slide App [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-2.1-green)]()
+[![Version](https://img.shields.io/badge/Version-2.2-green)]()
 
 [简体中文](README.md) | [English](README.en.md)
 
@@ -24,6 +24,10 @@ A simple and efficient auto-slide solution for Android devices, ideal for automa
 
 ## Recent Updates
 
+- `v2.2`
+  - Enabled R8 shrinking and obfuscation, significantly reducing APK package size
+  - Delayed Shizuku permission listener registration, optimizing APP cold start rendering speed
+  - Integrated GitHub proxy download acceleration (ghfast.top), resolving slow APK updates in China
 - `v2.1`
   - Optimized swipe gesture coordinate calculation during screen orientation changes
   - Enhanced Lifecycle management in UpdateChecker to eliminate potential memory leak risks

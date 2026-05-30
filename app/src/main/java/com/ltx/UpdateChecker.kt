@@ -41,6 +41,23 @@ object UpdateChecker {
 
     private const val UPDATE_INFO_URL =
         "https://api.github.com/repos/tianxing-ovo/AutoSlide/contents/update.json?ref=master"
+
+    // 用于加速下载的GitHub代理前缀
+    private const val GITHUB_PROXY_PREFIX = "https://ghfast.top/"
+
+    /**
+     * 代理加速GitHub URL
+     *
+     * @param url 原始url
+     * @return 代理加速后的url
+     */
+    private fun proxyGitHubUrl(url: String): String {
+        return if (url.startsWith("https://github.com/") || url.startsWith("https://raw.githubusercontent.com/")) {
+            GITHUB_PROXY_PREFIX + url
+        } else {
+            url
+        }
+    }
     private const val TAG = "UpdateChecker"
     private val executor = Executors.newSingleThreadExecutor()
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -86,7 +103,7 @@ object UpdateChecker {
                     val jsonObject = JSONObject(decodedContent)
                     val remoteVersionCode = jsonObject.optInt("versionCode", 0)
                     val remoteVersionName = jsonObject.optString("versionName", "")
-                    val downloadUrl = jsonObject.optString("downloadUrl", "")
+                    val downloadUrl = proxyGitHubUrl(jsonObject.optString("downloadUrl", ""))
                     val updateLog = jsonObject.optString("updateLog", "")
                     // 获取本地版本号
                     val localVersionCode = getLocalVersionCode(appContext)

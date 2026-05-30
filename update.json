@@ -1,6 +1,6 @@
 {
-  "versionCode": 12,
-  "versionName": "2.1",
-  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v2.1/AutoSlide-v2.1.apk",
-  "updateLog": "1. 优化横竖屏切换下自动滑动的坐标计算逻辑\n2. 增强更新检测的生命周期管理，解决潜在的内存泄露风险\n3. 增强悬浮窗在多窗口环境下的防崩溃处理，提升运行稳定性\n4. 移除 Shizuku 授权中不稳定的反射逻辑，提升高版本 Android 兼容性"
+  "versionCode": 13,
+  "versionName": "2.2",
+  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v2.2/AutoSlide-v2.2.apk",
+  "updateLog": "1. 开启 R8 代码混淆与资源缩减，大幅缩小 APK 体积\n2. 延迟 Shizuku 权限监听注册，优化 APP 冷启动渲染速度\n3. 集成 GitHub 代理下载加速（ghfast.top），解决国内更新包下载缓慢问题"
 }
