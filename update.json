@@ -1,6 +1,6 @@
 {
-  "versionCode": 13,
-  "versionName": "2.2",
-  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v2.2/AutoSlide-v2.2.apk",
-  "updateLog": "1. 开启 R8 代码混淆与资源缩减，大幅缩小 APK 体积\n2. 延迟 Shizuku 权限监听注册，优化 APP 冷启动渲染速度\n3. 集成 GitHub 代理下载加速（ghfast.top），解决国内更新包下载缓慢问题"
+  "versionCode": 14,
+  "versionName": "2.3",
+  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v2.3/AutoSlide-v2.3.apk",
+  "updateLog": "1. 重构更新检测逻辑，全面引入协程 (Kotlin Coroutines) 异步处理\n2. 优化界面权限检查性能，消除潜在的页面内存泄漏隐患\n3. 移除无障碍服务中冗余的窗口内容读取权限 (canRetrieveWindowContent)，提升隐私安全性\n4. 清理冗余的无用资源，修复 Android Lint 报告的所有潜在缺陷"
 }

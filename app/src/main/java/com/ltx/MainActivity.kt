@@ -1,5 +1,6 @@
 package com.ltx
 
+import android.annotation.SuppressLint
 import android.Manifest
 import android.app.AlertDialog
 import android.content.ClipData
@@ -21,11 +22,15 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.edit
 import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.slider.RangeSlider
 import com.google.android.material.slider.Slider
 import com.ltx.databinding.ActivityMainBinding
 import com.ltx.service.AutoSlideService
 import com.ltx.service.FloatingWindowService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuRemoteProcess
 
@@ -106,19 +111,19 @@ class MainActivity : AppCompatActivity() {
     /* 活动恢复时检查⌈无障碍服务权限⌋并同步开关状态 */
     override fun onResume() {
         super.onResume()
-        // 后台线程检查权限并同步开关状态
-        Thread {
+        // 使用协程异步检查权限并同步开关状态
+        lifecycleScope.launch(Dispatchers.IO) {
             val hasWriteSecure = hasWriteSecureSettingsPermission()
             val isAccessibilityEnabled = isAccessibilityServicePermissionEnabled()
             // 有⌈写入安全设置权限⌋时直接开启⌈无障碍服务权限⌋
             if (hasWriteSecure && !isAccessibilityEnabled) {
                 changeAccessibilityServicePermissionState(enable = true)
             }
-            val canDrawOverlays = Settings.canDrawOverlays(this)
+            val canDrawOverlays = Settings.canDrawOverlays(this@MainActivity)
             val useShizuku = canUseShizuku()
             // Shizuku可用时自动授权悬浮窗权限
             if (!canDrawOverlays && useShizuku) {
-                runOnUiThread {
+                withContext(Dispatchers.Main) {
                     if (!isFinishing && !isDestroyed) {
                         grantOverlayPermissionViaShizuku()
                     }
@@ -126,9 +131,9 @@ class MainActivity : AppCompatActivity() {
             }
             // 获取最终的权限状态
             val finalAccessibilityEnabled = isAccessibilityServicePermissionEnabled()
-            val finalCanDrawOverlays = Settings.canDrawOverlays(this)
+            val finalCanDrawOverlays = Settings.canDrawOverlays(this@MainActivity)
             // 回到主线程同步开关状态并应用无动画过渡
-            runOnUiThread {
+            withContext(Dispatchers.Main) {
                 if (!isFinishing && !isDestroyed) {
                     binding.accessibilityServicePermissionSwitch.isChecked = finalAccessibilityEnabled
                     binding.accessibilityServicePermissionSwitch.jumpDrawablesToCurrentState()
@@ -136,7 +141,7 @@ class MainActivity : AppCompatActivity() {
                     binding.overlayPermissionSwitch.jumpDrawablesToCurrentState()
                 }
             }
-        }.start()
+        }
         UpdateChecker.onHostResumed(this)
     }
 
@@ -148,8 +153,8 @@ class MainActivity : AppCompatActivity() {
 
     /* 恢复上次配置 */
     private fun restoreSettings() {
-        // 恢复滑动速度 (防越界保护)
-        val speed = preferences.getInt(KEY_SPEED, DEFAULT_SPEED).coerceIn(0, 100)
+        // 恢复滑动速度
+        val speed = preferences.getInt(KEY_SPEED, DEFAULT_SPEED).coerceIn(1, 100)
         // 恢复停顿模式
         val pauseMode = preferences.getPauseMode()
         // 恢复停顿时间
@@ -179,6 +184,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     /* 绑定停顿相关控件事件并持久化用户设置 */
+    @SuppressLint("SetTextI18n")
     private fun setupPauseControls() {
         binding.pauseModeToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
@@ -785,6 +791,7 @@ class MainActivity : AppCompatActivity() {
      *
      * @param pauseMode 停顿模式
      */
+    @SuppressLint("SetTextI18n")
     private fun updatePauseTimeVisibility(pauseMode: Int) {
         binding.pauseTimeContainer.isVisible = pauseMode != PAUSE_MODE_NONE
         if (pauseMode == PAUSE_MODE_FIXED) {

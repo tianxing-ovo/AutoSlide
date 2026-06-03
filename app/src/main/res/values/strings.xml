@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">自动滑动器</string>
     <string name="accessibility_service_description">自动滑动器需要无障碍服务权限来执行屏幕滑动操作</string>
-    <string name="accessibility_disable_message">请在系统设置中手动关闭无障碍服务</string>
     <string name="start">开始</string>
     <string name="pause_time">停顿时间（秒）：</string>
     <string name="custom_pause_time">自定义停顿时间（秒）</string>
@@ -9,7 +8,6 @@
     <string name="permission_required">需要权限</string>
     <string name="accessibility_service_permission_switch">无障碍服务权限开关</string>
     <string name="go_to_open">去开启</string>
-    <string name="go_to_close">去关闭</string>
     <string name="cancel">取消</string>
     <string name="accessibility_service_enabled">无障碍服务已开启</string>
     <string name="accessibility_service_disabled">无障碍服务已关闭</string>
@@ -44,6 +42,8 @@
     <string name="random_pause_time_range">停顿时间范围（秒）：</string>
     <string name="pause_time_range_format">%1$d - %2$d</string>
     <string name="setting_slide_speed">滑动速度</string>
+    <string name="speed_label_slow">慢</string>
+    <string name="speed_label_fast">快</string>
     <string name="check_update">检查更新</string>
     <string name="checking_update">正在检查更新</string>
     <string name="already_latest_version">当前已经是最新版本</string>
@@ -53,8 +53,8 @@
     <string name="update_now">立即更新</string>
     <string name="downloading_update">正在下载更新</string>
     <string name="download_failed">下载失败</string>
+    <string name="install_failed">安装失败</string>
     <string name="install_permission_required">需要开启安装未知应用权限</string>
     <string name="overlay_permission_enabled">悬浮窗权限已开启</string>
     <string name="overlay_permission_disabled">悬浮窗权限已关闭</string>
-    <string name="overlay_auto_enabled">已自动开启悬浮窗权限</string>
 </resources>

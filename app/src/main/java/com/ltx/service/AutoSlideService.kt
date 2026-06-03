@@ -113,7 +113,7 @@ class AutoSlideService : AccessibilityService() {
      * @param newSpeed 最新速度值
      */
     fun updateSpeed(newSpeed: Int) {
-        speed = newSpeed.coerceIn(0, 100)
+        speed = newSpeed.coerceIn(1, 100)
         if (!isRunning) {
             return
         }
@@ -307,7 +307,7 @@ class AutoSlideService : AccessibilityService() {
      * @return 手势持续时间(毫秒)
      */
     private fun calculateGestureDurationMillis(): Long {
-        val normalizedSpeed = speed.coerceIn(0, 100) / 100.0
+        val normalizedSpeed = speed.coerceIn(1, 100) / 100.0
         val curvedProgress = ln(1.0 + SPEED_CURVE_FACTOR * normalizedSpeed) /
                 ln(1.0 + SPEED_CURVE_FACTOR)
         val durationRange = MAX_GESTURE_DURATION_MS - MIN_GESTURE_DURATION_MS

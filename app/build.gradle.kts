@@ -19,9 +19,9 @@ android {
         // 目标设备的SDK版本
         targetSdk = 37
         // 版本号
-        versionCode = 13
+        versionCode = 14
         // 版本名称
-        versionName = "2.2"
+        versionName = "2.3"
         // 单元测试
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -64,6 +64,8 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.shizuku.api)
     implementation(libs.shizuku.provider)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

@@ -1,7 +1,7 @@
 # Android Auto-Slide App [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-2.2-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
+[![Version](https://img.shields.io/badge/Version-2.3-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/total)](https://github.com/tianxing-ovo/AutoSlide/releases)
 [![Latest Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/latest/total)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 
@@ -26,6 +26,11 @@ A simple and efficient auto-slide solution for Android devices, ideal for automa
 
 ## Recent Updates
 
+- `v2.3`
+  - Refactored update checker to use Kotlin Coroutines for clean asynchronous execution
+  - Optimized background permission checks in MainActivity using lifecycleScope, preventing memory leaks
+  - Removed redundant `canRetrieveWindowContent` accessibility permission to improve user privacy
+  - Cleaned up unused resources and resolved all Android Lint warnings for a cleaner codebase
 - `v2.2`
   - Enabled R8 shrinking and obfuscation, significantly reducing APK package size
   - Delayed Shizuku permission listener registration, optimizing APP cold start rendering speed
@@ -35,10 +40,6 @@ A simple and efficient auto-slide solution for Android devices, ideal for automa
   - Enhanced Lifecycle management in UpdateChecker to eliminate potential memory leak risks
   - Added robust crash prevention in FloatingWindowService for multi-window/split-screen environments
   - Removed unstable reflection calls in Shizuku integration to boost compatibility with newer Android versions
-- `v2.0`
-  - Added Shizuku authorization for more convenient automatic accessibility setup
-  - Optimized permission switch handling to reduce duplicate triggers and improve interaction
-  - Added support for manually entering custom pause durations for more flexible configuration
 
 ## Screenshots
 

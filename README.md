@@ -1,7 +1,7 @@
 # 安卓自动滑动器APP [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-2.2-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
+[![Version](https://img.shields.io/badge/Version-2.3-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/total)](https://github.com/tianxing-ovo/AutoSlide/releases)
 [![Latest Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/latest/total)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 
@@ -26,6 +26,11 @@
 
 ## 最近更新
 
+- `v2.3`
+  - 重构更新检测与界面逻辑，全面迁移至 Kotlin 协程 (Coroutines) 异步处理
+  - 优化权限监控与生命周期绑定，彻底消除潜在的页面内存泄漏隐患
+  - 移除无障碍服务配置中冗余的窗口内容读取权限，提升隐私合规性
+  - 清理项目中全部冗余无用资源，全面通过并修复 Android Lint 的所有审查缺陷
 - `v2.2`
   - 开启 R8 代码混淆与资源缩减，大幅缩小 APK 体积
   - 延迟 Shizuku 权限监听注册，优化 APP 冷启动渲染速度
@@ -35,10 +40,6 @@
   - 增强更新检测的生命周期管理，解决潜在的内存泄露风险
   - 增强悬浮窗在多窗口环境下的防崩溃处理，提升运行稳定性
   - 移除 Shizuku 授权中不稳定的反射逻辑，提升高版本 Android 兼容性
-- `v2.0`
-  - 集成 Shizuku 授权，支持更便捷地自动开启无障碍服务
-  - 优化权限开关监听逻辑，减少重复触发并提升交互体验
-  - 支持手动输入自定义停顿时间，参数设置更灵活
 
 ## 截图展示
 
