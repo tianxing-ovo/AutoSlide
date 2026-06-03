@@ -1,7 +1,9 @@
 # 安卓自动滑动器APP [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-2.2-green)]()
+[![Version](https://img.shields.io/badge/Version-2.2-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/total)](https://github.com/tianxing-ovo/AutoSlide/releases)
+[![Latest Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/latest/total)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 
 [简体中文](README.md) | [English](README.en.md)
 
