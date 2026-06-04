@@ -6,6 +6,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Environment
 import android.os.SystemClock
 import android.provider.Settings
@@ -351,6 +353,11 @@ object UpdateChecker {
      * @return 当前应用的版本号
      */
     private fun getLocalVersionCode(context: Context): Long {
-        return context.packageManager.getPackageInfo(context.packageName, 0).longVersionCode
+        val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
+        } else {
+            context.packageManager.getPackageInfo(context.packageName, 0)
+        }
+        return packageInfo.longVersionCode
     }
 }

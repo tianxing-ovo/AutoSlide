@@ -11,6 +11,7 @@ import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Paint
 import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.text.InputType
@@ -671,7 +672,9 @@ class MainActivity : AppCompatActivity() {
         AlertDialog.Builder(this).setTitle(R.string.authorize_via_adb).setView(content)
             .setPositiveButton(R.string.copy_command) { _, _ ->
                 copyToClipboard(command)
-                Toast.makeText(this, R.string.command_copied, Toast.LENGTH_SHORT).show()
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                    Toast.makeText(this, R.string.command_copied, Toast.LENGTH_SHORT).show()
+                }
             }.setNegativeButton(R.string.cancel, null).show()
     }
 
