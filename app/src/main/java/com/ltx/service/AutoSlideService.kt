@@ -30,6 +30,8 @@ import com.ltx.KEY_SPEED
 import com.ltx.PAUSE_MODE_FIXED
 import com.ltx.PAUSE_MODE_NONE
 import com.ltx.PAUSE_MODE_RANDOM
+import com.ltx.SlideEvent
+import com.ltx.SlideEventHub
 import java.lang.ref.WeakReference
 import kotlin.math.ln
 import kotlin.math.roundToLong
@@ -91,9 +93,6 @@ class AutoSlideService : AccessibilityService() {
          */
         @JvmStatic
         fun getInstance(): AutoSlideService? = instanceRef?.get()
-
-        /* 强制停止滑动回调 */
-        var onForceStopListener: (() -> Unit)? = null
     }
 
     /**
@@ -211,7 +210,7 @@ class AutoSlideService : AccessibilityService() {
     /* 强制停止滑动并恢复悬浮窗面板 */
     private fun forceStop() {
         stopSlide()
-        onForceStopListener?.invoke()
+        SlideEventHub.sendEvent(SlideEvent.ForceStop)
     }
 
     /* 注册息屏广播 */

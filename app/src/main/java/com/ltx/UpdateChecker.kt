@@ -17,6 +17,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -85,7 +86,8 @@ object UpdateChecker {
         }
         val activityRef = WeakReference(activity)
         val appContext = activity.applicationContext
-        scope.launch {
+        val lifecycleScope = (activity as? LifecycleOwner)?.lifecycleScope ?: scope
+        lifecycleScope.launch {
             fetchUpdateInfo(appContext).onSuccess { updateInfo ->
                 handleUpdateResult(activityRef, updateInfo, showToastOnLatest)
             }.onFailure {

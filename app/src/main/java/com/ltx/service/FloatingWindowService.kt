@@ -29,7 +29,14 @@ import com.ltx.KEY_SPEED
 import com.ltx.MainActivity
 import com.ltx.PREFS_NAME
 import com.ltx.R
+import com.ltx.SlideEvent
+import com.ltx.SlideEventHub
 import com.ltx.getPauseMode
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 /**
@@ -48,6 +55,7 @@ class FloatingWindowService : Service() {
     private var initialY = 0f
     private var initialTouchX = 0f
     private var initialTouchY = 0f
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
 
     companion object {
@@ -81,18 +89,19 @@ class FloatingWindowService : Service() {
             stopSelf()
             return
         }
-        // 注册自动滑动服务停止回调
-        AutoSlideService.onForceStopListener = {
-            if (::rootView.isInitialized) {
-                expand(stopSlide = false)
+        // 监听自动滑动服务事件
+        serviceScope.launch {
+            SlideEventHub.eventFlow.collect { event ->
+                if (event is SlideEvent.ForceStop && ::rootView.isInitialized) {
+                    expand(stopSlide = false)
+                }
             }
         }
     }
 
     /* 服务销毁时移除悬浮窗 */
     override fun onDestroy() {
-        // 移除自动滑动服务停止回调
-        AutoSlideService.onForceStopListener = null
+        serviceScope.cancel()
         super.onDestroy()
         runCatching { windowManager.removeView(rootView) }
     }
