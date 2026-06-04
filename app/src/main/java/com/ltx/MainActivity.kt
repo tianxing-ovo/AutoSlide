@@ -607,7 +607,7 @@ class MainActivity : AppCompatActivity() {
             contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, enabledServices.joinToString(":")
         )
         // 更新无障碍服务权限开关状态
-        runOnUiThread {
+        lifecycleScope.launch(mainDispatcher) {
             if (!isFinishing && !isDestroyed) {
                 binding.accessibilityServicePermissionSwitch.isChecked = isAccessibilityServicePermissionEnabled()
                 binding.accessibilityServicePermissionSwitch.jumpDrawablesToCurrentState()

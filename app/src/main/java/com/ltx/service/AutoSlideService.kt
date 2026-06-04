@@ -30,6 +30,7 @@ import com.ltx.KEY_SPEED
 import com.ltx.PAUSE_MODE_FIXED
 import com.ltx.PAUSE_MODE_NONE
 import com.ltx.PAUSE_MODE_RANDOM
+import java.lang.ref.WeakReference
 import kotlin.math.ln
 import kotlin.math.roundToLong
 
@@ -82,7 +83,7 @@ class AutoSlideService : AccessibilityService() {
         private const val MAX_GESTURE_DURATION_MS = 900L
         private const val NO_PAUSE_GAP_MS = 80L
         private const val SPEED_CURVE_FACTOR = 0.7
-        private var instance: AutoSlideService? = null
+        private var instanceRef: WeakReference<AutoSlideService>? = null
 
         /**
          * 获取服务单例实例
@@ -90,7 +91,7 @@ class AutoSlideService : AccessibilityService() {
          * @return 当前服务实例
          */
         @JvmStatic
-        fun getInstance(): AutoSlideService? = instance
+        fun getInstance(): AutoSlideService? = instanceRef?.get()
 
         /* 强制停止滑动回调 */
         var onForceStopListener: (() -> Unit)? = null
@@ -166,7 +167,7 @@ class AutoSlideService : AccessibilityService() {
     /* 服务连接完成后初始化屏幕参数并注册单例 */
     override fun onServiceConnected() {
         super.onServiceConnected()
-        instance = this
+        instanceRef = WeakReference(this)
         // 请求按键过滤能力(用于音量键强制停止滑动)
         serviceInfo = serviceInfo.apply {
             flags = flags or AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
@@ -178,7 +179,7 @@ class AutoSlideService : AccessibilityService() {
     override fun onDestroy() {
         unregisterScreenOffReceiver()
         stopSlide()
-        instance = null
+        instanceRef = null
         super.onDestroy()
     }
 

@@ -84,7 +84,7 @@ class FloatingWindowService : Service() {
         // 注册自动滑动服务停止回调
         AutoSlideService.onForceStopListener = {
             if (::rootView.isInitialized) {
-                rootView.post { expand(stopSlide = false) }
+                expand(stopSlide = false)
             }
         }
     }
