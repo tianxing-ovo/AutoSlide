@@ -51,6 +51,7 @@ class AutoSlideService : AccessibilityService() {
     private var maxPauseTime = DEFAULT_MAX_PAUSE_TIME
     private var currentDirection = DIRECTION_LEFT
     private var isRunning = false
+    private var isGestureActive = false
 
     /* 自动滑动主循环 */
     private val slideRunnable = Runnable { runSlide() }
@@ -64,8 +65,6 @@ class AutoSlideService : AccessibilityService() {
         val gestureDurationMillis = calculateGestureDurationMillis()
         // 执行滑动
         performSlideByDirection(gestureDurationMillis)
-        // 计算并设置下一次滑动时间
-        handler.postDelayed(slideRunnable, gestureDurationMillis + calculatePauseDelayMillis())
     }
 
     /* 息屏时强制停止滑动 */
@@ -116,14 +115,6 @@ class AutoSlideService : AccessibilityService() {
      */
     fun updateSpeed(newSpeed: Int) {
         speed = newSpeed.coerceIn(1, 100)
-        if (!isRunning) {
-            return
-        }
-        handler.removeCallbacks(slideRunnable)
-        // 重新设置滑动时间
-        handler.postDelayed(
-            slideRunnable, calculateGestureDurationMillis() + calculatePauseDelayMillis()
-        )
     }
 
     /**
@@ -139,13 +130,12 @@ class AutoSlideService : AccessibilityService() {
         pauseTime = time.coerceAtLeast(1)
         minPauseTime = min.coerceAtLeast(1)
         maxPauseTime = max.coerceAtLeast(1)
-        if (!isRunning) {
+        if (!isRunning || isGestureActive) {
             return
         }
+        // 移除当前滑动任务并重新调度新的停顿时间
         handler.removeCallbacks(slideRunnable)
-        handler.postDelayed(
-            slideRunnable, calculateGestureDurationMillis() + calculatePauseDelayMillis()
-        )
+        handler.postDelayed(slideRunnable, calculatePauseDelayMillis())
     }
 
     /**
@@ -189,6 +179,7 @@ class AutoSlideService : AccessibilityService() {
             return
         }
         isRunning = false
+        isGestureActive = false
         handler.removeCallbacks(slideRunnable)
     }
 
@@ -284,6 +275,7 @@ class AutoSlideService : AccessibilityService() {
     /* 启动自动滑动循环 */
     private fun startAutoSlide() {
         isRunning = true
+        isGestureActive = false
         handler.removeCallbacks(slideRunnable)
         // 延迟300ms执行第一次滑动(等待悬浮窗完成最小化动画)(防止悬浮窗拦截手势)
         handler.postDelayed(slideRunnable, 300L)
@@ -369,7 +361,18 @@ class AutoSlideService : AccessibilityService() {
         val gesture = GestureDescription.Builder().addStroke(
             GestureDescription.StrokeDescription(path, 0, durationMillis)
         ).build()
-        // 分发手势
-        dispatchGesture(gesture, null, null)
+        // 设置手势活动状态并分发手势
+        isGestureActive = true
+        dispatchGesture(gesture, object : GestureResultCallback() {
+            override fun onCompleted(gestureDescription: GestureDescription?) {
+                isGestureActive = false
+                if (isRunning) {
+                    handler.postDelayed(slideRunnable, calculatePauseDelayMillis())
+                }
+            }
+            override fun onCancelled(gestureDescription: GestureDescription?) {
+                onCompleted(gestureDescription)
+            }
+        }, handler)
     }
 }

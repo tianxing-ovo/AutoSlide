@@ -16,6 +16,7 @@ import android.provider.Settings
 import android.text.InputType
 import android.util.Log
 import android.util.TypedValue
+import android.widget.CompoundButton
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -90,6 +91,54 @@ class MainActivity : AppCompatActivity() {
         pendingShizukuOnFailed = null
     }
 
+    /* 无障碍服务权限开关监听器 */
+    private val accessibilitySwitchListener = CompoundButton.OnCheckedChangeListener { _, isChecked ->
+        if (isChecked) {
+            onAccessibilityServicePermissionSwitchEnabled()
+        } else {
+            onAccessibilityServicePermissionSwitchDisabled()
+        }
+    }
+
+    /* 悬浮窗权限开关监听器 */
+    private val overlaySwitchListener = CompoundButton.OnCheckedChangeListener { _, isChecked ->
+        if (isChecked) {
+            onOverlayPermissionSwitchEnabled()
+        } else {
+            // Shizuku可用时直接关闭悬浮窗权限
+            if (canUseShizuku()) {
+                revokeOverlayPermissionViaShizuku()
+            } else {
+                startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
+                updateOverlaySwitchState(true)
+            }
+        }
+    }
+
+    /**
+     * 更新无障碍服务权限开关状态
+     *
+     * @param checked 开关状态
+     */
+    private fun updateAccessibilitySwitchState(checked: Boolean) {
+        binding.accessibilityServicePermissionSwitch.setOnCheckedChangeListener(null)
+        binding.accessibilityServicePermissionSwitch.isChecked = checked
+        binding.accessibilityServicePermissionSwitch.jumpDrawablesToCurrentState()
+        binding.accessibilityServicePermissionSwitch.setOnCheckedChangeListener(accessibilitySwitchListener)
+    }
+
+    /**
+     * 更新悬浮窗权限开关状态
+     *
+     * @param checked 开关状态
+     */
+    private fun updateOverlaySwitchState(checked: Boolean) {
+        binding.overlayPermissionSwitch.setOnCheckedChangeListener(null)
+        binding.overlayPermissionSwitch.isChecked = checked
+        binding.overlayPermissionSwitch.jumpDrawablesToCurrentState()
+        binding.overlayPermissionSwitch.setOnCheckedChangeListener(overlaySwitchListener)
+    }
+
     /**
      * 初始化Activity界面布局和事件绑定
      *
@@ -141,10 +190,8 @@ class MainActivity : AppCompatActivity() {
             // 回到主线程同步开关状态并应用无动画过渡
             withContext(mainDispatcher) {
                 if (!isFinishing && !isDestroyed) {
-                    binding.accessibilityServicePermissionSwitch.isChecked = finalAccessibilityEnabled
-                    binding.accessibilityServicePermissionSwitch.jumpDrawablesToCurrentState()
-                    binding.overlayPermissionSwitch.isChecked = finalCanDrawOverlays
-                    binding.overlayPermissionSwitch.jumpDrawablesToCurrentState()
+                    updateAccessibilitySwitchState(finalAccessibilityEnabled)
+                    updateOverlaySwitchState(finalCanDrawOverlays)
                 }
             }
         }
@@ -330,32 +377,12 @@ class MainActivity : AppCompatActivity() {
 
     /* 设置⌈无障碍服务权限⌋开关监听器 */
     private fun setupAccessibilityServicePermissionToggle() {
-        binding.accessibilityServicePermissionSwitch.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked == isAccessibilityServicePermissionEnabled()) return@setOnCheckedChangeListener
-            if (isChecked) {
-                onAccessibilityServicePermissionSwitchEnabled()
-            } else {
-                onAccessibilityServicePermissionSwitchDisabled()
-            }
-        }
+        binding.accessibilityServicePermissionSwitch.setOnCheckedChangeListener(accessibilitySwitchListener)
     }
 
     /* 设置⌈悬浮窗权限⌋开关监听器 */
     private fun setupOverlayPermissionToggle() {
-        binding.overlayPermissionSwitch.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked == Settings.canDrawOverlays(this)) return@setOnCheckedChangeListener
-            if (isChecked) {
-                onOverlayPermissionSwitchEnabled()
-            } else {
-                // Shizuku可用时直接关闭悬浮窗权限
-                if (canUseShizuku()) {
-                    revokeOverlayPermissionViaShizuku()
-                } else {
-                    startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
-                    binding.overlayPermissionSwitch.isChecked = true
-                }
-            }
-        }
+        binding.overlayPermissionSwitch.setOnCheckedChangeListener(overlaySwitchListener)
     }
 
     /* 处理⌈悬浮窗权限⌋开关打开动作 */
@@ -380,10 +407,10 @@ class MainActivity : AppCompatActivity() {
                 OPTION_MANUAL -> startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION))
                 OPTION_SHIZUKU -> handleShizukuAuthorization(
                     onGranted = { grantOverlayPermissionViaShizuku() },
-                    onFailed = { binding.overlayPermissionSwitch.isChecked = false })
+                    onFailed = { updateOverlaySwitchState(false) })
             }
         }
-        setOnCancelListener { binding.overlayPermissionSwitch.isChecked = false }
+        setOnCancelListener { updateOverlaySwitchState(false) }
         show()
     }
 
@@ -391,36 +418,40 @@ class MainActivity : AppCompatActivity() {
     private fun grantOverlayPermissionViaShizuku() {
         runShizukuCommand(command = arrayOf("appops", "set", packageName, "SYSTEM_ALERT_WINDOW", "allow"), onSuccess = {
             binding.overlayPermissionSwitch.post {
-                if (Settings.canDrawOverlays(this)) {
-                    binding.overlayPermissionSwitch.isChecked = true
+                val canDraw = Settings.canDrawOverlays(this)
+                if (canDraw) {
+                    updateOverlaySwitchState(true)
                     Toast.makeText(
                         this, R.string.overlay_permission_enabled, Toast.LENGTH_SHORT
                     ).show()
                 } else {
                     Log.e(TAG, "Overlay permission still missing after Shizuku grant")
                     Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
-                    binding.overlayPermissionSwitch.isChecked = false
+                    updateOverlaySwitchState(false)
                 }
             }
-        }, onFailure = { binding.overlayPermissionSwitch.isChecked = false })
+        }, onFailure = { updateOverlaySwitchState(false) })
     }
 
     /* 通过Shizuku撤销悬浮窗权限 */
     private fun revokeOverlayPermissionViaShizuku() {
         runShizukuCommand(command = arrayOf("appops", "set", packageName, "SYSTEM_ALERT_WINDOW", "deny"), onSuccess = {
             binding.overlayPermissionSwitch.post {
-                binding.overlayPermissionSwitch.isChecked = Settings.canDrawOverlays(this)
+                val canDraw = Settings.canDrawOverlays(this)
+                updateOverlaySwitchState(canDraw)
                 Toast.makeText(this, R.string.overlay_permission_disabled, Toast.LENGTH_SHORT).show()
             }
-        }, onFailure = { binding.overlayPermissionSwitch.isChecked = true })
+        }, onFailure = { updateOverlaySwitchState(true) })
     }
 
     /* 处理⌈无障碍服务权限⌋开关打开动作 */
     private fun onAccessibilityServicePermissionSwitchEnabled() {
         // 有⌈写入安全设置权限⌋时直接开启⌈无障碍服务权限⌋
         if (hasWriteSecureSettingsPermission()) {
-            changeAccessibilityServicePermissionState(enable = true)
-            Toast.makeText(this, R.string.accessibility_service_enabled, Toast.LENGTH_SHORT).show()
+            lifecycleScope.launch {
+                changeAccessibilityServicePermissionState(enable = true)
+                Toast.makeText(this@MainActivity, R.string.accessibility_service_enabled, Toast.LENGTH_SHORT).show()
+            }
             return
         }
         // 展示⌈无障碍服务权限⌋选项弹窗
@@ -429,17 +460,25 @@ class MainActivity : AppCompatActivity() {
 
     /* 处理⌈无障碍服务权限⌋开关关闭动作 */
     private fun onAccessibilityServicePermissionSwitchDisabled() {
-        if (!isAccessibilityServicePermissionEnabled()) {
-            return
+        lifecycleScope.launch(ioDispatcher) {
+            val isEnabled = isAccessibilityServicePermissionEnabled()
+            withContext(mainDispatcher) {
+                if (!isEnabled) {
+                    return@withContext
+                }
+                // 有⌈写入安全设置权限⌋时直接关闭⌈无障碍服务权限⌋
+                if (hasWriteSecureSettingsPermission()) {
+                    lifecycleScope.launch {
+                        changeAccessibilityServicePermissionState(enable = false)
+                        Toast.makeText(this@MainActivity, R.string.accessibility_service_disabled, Toast.LENGTH_SHORT)
+                            .show()
+                    }
+                    return@withContext
+                }
+                // 打开⌈无障碍⌋设置页
+                openAppAccessibilitySettings()
+            }
         }
-        // 有⌈写入安全设置权限⌋时直接关闭⌈无障碍服务权限⌋
-        if (hasWriteSecureSettingsPermission()) {
-            changeAccessibilityServicePermissionState(enable = false)
-            Toast.makeText(this, R.string.accessibility_service_disabled, Toast.LENGTH_SHORT).show()
-            return
-        }
-        // 打开⌈无障碍⌋设置页
-        openAppAccessibilitySettings()
     }
 
     /* 展示⌈无障碍服务权限⌋选项弹窗 */
@@ -458,16 +497,15 @@ class MainActivity : AppCompatActivity() {
                 OPTION_MANUAL -> openAppAccessibilitySettings()
                 OPTION_SHIZUKU -> handleShizukuAuthorization(
                     onGranted = { grantPermissionViaShizuku() },
-                    onFailed = { binding.accessibilityServicePermissionSwitch.isChecked = false })
-
+                    onFailed = { updateAccessibilitySwitchState(false) })
                 OPTION_ADB -> {
                     showAdbCommandDialog()
-                    binding.accessibilityServicePermissionSwitch.isChecked = false
+                    updateAccessibilitySwitchState(false)
                 }
             }
         }
         // 设置取消监听器
-        setOnCancelListener { binding.accessibilityServicePermissionSwitch.isChecked = false }
+        setOnCancelListener { updateAccessibilitySwitchState(false) }
         // 展示对话框
         show()
     }
@@ -509,21 +547,23 @@ class MainActivity : AppCompatActivity() {
     private fun grantPermissionViaShizuku() {
         runShizukuCommand(
             command = arrayOf(
-            "/system/bin/pm", "grant", packageName, Manifest.permission.WRITE_SECURE_SETTINGS
-        ), onSuccess = {
-            binding.accessibilityServicePermissionSwitch.post {
-                if (hasWriteSecureSettingsPermission()) {
-                    changeAccessibilityServicePermissionState(enable = true)
-                    Toast.makeText(
-                        this, R.string.accessibility_service_enabled, Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    Log.e(TAG, "WRITE_SECURE_SETTINGS still missing after Shizuku grant")
-                    Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
-                    binding.accessibilityServicePermissionSwitch.isChecked = false
+                "/system/bin/pm", "grant", packageName, Manifest.permission.WRITE_SECURE_SETTINGS
+            ), onSuccess = {
+                binding.accessibilityServicePermissionSwitch.post {
+                    if (hasWriteSecureSettingsPermission()) {
+                        lifecycleScope.launch {
+                            changeAccessibilityServicePermissionState(enable = true)
+                            Toast.makeText(
+                                this@MainActivity, R.string.accessibility_service_enabled, Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    } else {
+                        Log.e(TAG, "WRITE_SECURE_SETTINGS still missing after Shizuku grant")
+                        Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
+                        updateAccessibilitySwitchState(false)
+                    }
                 }
-            }
-        }, onFailure = { binding.accessibilityServicePermissionSwitch.isChecked = false })
+            }, onFailure = { updateAccessibilitySwitchState(false) })
     }
 
     /**
@@ -591,9 +631,9 @@ class MainActivity : AppCompatActivity() {
      *
      * @param enable 是否启用⌈无障碍服务权限⌋
      */
-    private fun changeAccessibilityServicePermissionState(enable: Boolean) {
+    private suspend fun changeAccessibilityServicePermissionState(enable: Boolean) = withContext(ioDispatcher) {
         // 获取当前已启用的无障碍服务列表
-        val targetComponent = ComponentName(this, AutoSlideService::class.java)
+        val targetComponent = ComponentName(this@MainActivity, AutoSlideService::class.java)
         val enabledServices = Settings.Secure.getString(
             contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
         )?.split(":")?.filter { it.isNotBlank() }?.mapNotNull {
@@ -605,17 +645,20 @@ class MainActivity : AppCompatActivity() {
             Settings.Secure.putInt(contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED, 1)
         } else {
             enabledServices.remove(targetComponent)
+            if (enabledServices.isEmpty()) {
+                Settings.Secure.putInt(contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED, 0)
+            }
         }
         // 更新无障碍服务列表字符串
         val newSettingString = enabledServices.joinToString(":") { it.flattenToString() }
         Settings.Secure.putString(
             contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, newSettingString
         )
+        val finalAccessibilityEnabled = isAccessibilityServicePermissionEnabled()
         // 更新无障碍服务权限开关状态并应用无动画过渡
-        lifecycleScope.launch(mainDispatcher) {
+        withContext(mainDispatcher) {
             if (!isFinishing && !isDestroyed) {
-                binding.accessibilityServicePermissionSwitch.isChecked = isAccessibilityServicePermissionEnabled()
-                binding.accessibilityServicePermissionSwitch.jumpDrawablesToCurrentState()
+                updateAccessibilitySwitchState(finalAccessibilityEnabled)
             }
         }
     }
@@ -742,7 +785,9 @@ class MainActivity : AppCompatActivity() {
             return true
         }
         if (hasWriteSecureSettingsPermission()) {
-            changeAccessibilityServicePermissionState(enable = true)
+            lifecycleScope.launch {
+                changeAccessibilityServicePermissionState(enable = true)
+            }
             Toast.makeText(
                 this, R.string.accessibility_service_auto_enabled, Toast.LENGTH_SHORT
             ).show()
