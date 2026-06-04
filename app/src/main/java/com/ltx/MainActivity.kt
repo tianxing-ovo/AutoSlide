@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.ComponentName
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -591,22 +592,26 @@ class MainActivity : AppCompatActivity() {
      * @param enable 是否启用⌈无障碍服务权限⌋
      */
     private fun changeAccessibilityServicePermissionState(enable: Boolean) {
-        val serviceName = "$packageName/${AutoSlideService::class.java.canonicalName}"
+        // 获取当前已启用的无障碍服务列表
+        val targetComponent = ComponentName(this, AutoSlideService::class.java)
         val enabledServices = Settings.Secure.getString(
             contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-        )?.split(":")?.filter { it.isNotBlank() }?.toMutableSet() ?: mutableSetOf()
-        // 确保服务列表不包含重复项
+        )?.split(":")?.filter { it.isNotBlank() }?.mapNotNull {
+            ComponentName.unflattenFromString(it.trim())
+        }?.toMutableSet() ?: mutableSetOf()
+        // 更新无障碍服务列表
         if (enable) {
-            enabledServices.add(serviceName)
+            enabledServices.add(targetComponent)
             Settings.Secure.putInt(contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED, 1)
         } else {
-            enabledServices.remove(serviceName)
+            enabledServices.remove(targetComponent)
         }
-        // 更新无障碍服务列表
+        // 更新无障碍服务列表字符串
+        val newSettingString = enabledServices.joinToString(":") { it.flattenToString() }
         Settings.Secure.putString(
-            contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, enabledServices.joinToString(":")
+            contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, newSettingString
         )
-        // 更新无障碍服务权限开关状态
+        // 更新无障碍服务权限开关状态并应用无动画过渡
         lifecycleScope.launch(mainDispatcher) {
             if (!isFinishing && !isDestroyed) {
                 binding.accessibilityServicePermissionSwitch.isChecked = isAccessibilityServicePermissionEnabled()
@@ -720,8 +725,11 @@ class MainActivity : AppCompatActivity() {
         val services = Settings.Secure.getString(
             contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
         ) ?: return false
-        val serviceName = "$packageName/${AutoSlideService::class.java.canonicalName}"
-        return services.split(":").any { it.trim().equals(serviceName, ignoreCase = true) }
+        // 检查是否包含目标组件
+        val targetComponent = ComponentName(this, AutoSlideService::class.java)
+        return services.split(":").any {
+            ComponentName.unflattenFromString(it.trim()) == targetComponent
+        }
     }
 
     /**
