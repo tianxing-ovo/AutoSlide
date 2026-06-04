@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.os.IBinder
 import android.util.Log
@@ -104,6 +105,25 @@ class FloatingWindowService : Service() {
         serviceScope.cancel()
         super.onDestroy()
         runCatching { windowManager.removeView(rootView) }
+    }
+
+    /**
+     * 配置改变时更新悬浮窗位置
+     * 
+     * @param newConfig 配置
+     */
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (::rootView.isInitialized && ::layoutParams.isInitialized) {
+            val displayMetrics = resources.displayMetrics
+            val screenWidth = displayMetrics.widthPixels
+            val screenHeight = displayMetrics.heightPixels
+            val viewWidth = rootView.width
+            val viewHeight = rootView.height
+            layoutParams.x = layoutParams.x.coerceIn(0, (screenWidth - viewWidth).coerceAtLeast(0))
+            layoutParams.y = layoutParams.y.coerceIn(0, (screenHeight - viewHeight).coerceAtLeast(0))
+            windowManager.updateViewLayout(rootView, layoutParams)
+        }
     }
 
     /**
