@@ -207,8 +207,7 @@ class AutoSlideService : AccessibilityService() {
             return super.onKeyEvent(event)
         }
         // 判断是否为音量键
-        val isVolumeKey = event.keyCode == KeyEvent.KEYCODE_VOLUME_UP
-                || event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN
+        val isVolumeKey = event.keyCode == KeyEvent.KEYCODE_VOLUME_UP || event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN
         if (!isVolumeKey) {
             return super.onKeyEvent(event)
         }
@@ -229,10 +228,7 @@ class AutoSlideService : AccessibilityService() {
             return
         }
         ContextCompat.registerReceiver(
-            this,
-            screenOffReceiver,
-            IntentFilter(Intent.ACTION_SCREEN_OFF),
-            ContextCompat.RECEIVER_NOT_EXPORTED
+            this, screenOffReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF), ContextCompat.RECEIVER_NOT_EXPORTED
         )
         isScreenOffReceiverRegistered = true
     }
@@ -309,8 +305,7 @@ class AutoSlideService : AccessibilityService() {
      */
     private fun calculateGestureDurationMillis(): Long {
         val normalizedSpeed = speed.coerceIn(1, 100) / 100.0
-        val curvedProgress = ln(1.0 + SPEED_CURVE_FACTOR * normalizedSpeed) /
-                ln(1.0 + SPEED_CURVE_FACTOR)
+        val curvedProgress = ln(1.0 + SPEED_CURVE_FACTOR * normalizedSpeed) / ln(1.0 + SPEED_CURVE_FACTOR)
         val durationRange = MAX_GESTURE_DURATION_MS - MIN_GESTURE_DURATION_MS
         return (MAX_GESTURE_DURATION_MS - durationRange * curvedProgress).roundToLong()
     }
@@ -344,9 +339,30 @@ class AutoSlideService : AccessibilityService() {
     private fun dispatchLineGesture(
         startX: Float, startY: Float, endX: Float, endY: Float, durationMillis: Long
     ) {
+        val density = resources.displayMetrics.density
+        val maxOffset = 10f * density
+        // 计算起止坐标偏移量
+        val startXOffset = ((Math.random() * 2 - 1) * maxOffset).toFloat()
+        val startYOffset = ((Math.random() * 2 - 1) * maxOffset).toFloat()
+        val endXOffset = ((Math.random() * 2 - 1) * maxOffset).toFloat()
+        val endYOffset = ((Math.random() * 2 - 1) * maxOffset).toFloat()
+        // 计算实际起止坐标
+        val actualStartX = startX + startXOffset
+        val actualStartY = startY + startYOffset
+        val actualEndX = endX + endXOffset
+        val actualEndY = endY + endYOffset
+        // 计算中点坐标
+        val midX = (actualStartX + actualEndX) / 2
+        val midY = (actualStartY + actualEndY) / 2
+        // 计算控制点坐标偏移量
+        val controlOffset = 15f * density
+        // 计算控制点坐标
+        val controlX = midX + ((Math.random() * 2 - 1) * controlOffset).toFloat()
+        val controlY = midY + ((Math.random() * 2 - 1) * controlOffset).toFloat()
+        // 构造贝塞尔曲线路径模拟真人滑动的自然微弯轨迹
         val path = Path().apply {
-            moveTo(startX, startY)
-            lineTo(endX, endY)
+            moveTo(actualStartX, actualStartY)
+            quadTo(controlX, controlY, actualEndX, actualEndY)
         }
         // 构建并分发手势
         val gesture = GestureDescription.Builder().addStroke(

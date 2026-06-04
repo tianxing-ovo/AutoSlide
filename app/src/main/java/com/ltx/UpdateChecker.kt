@@ -287,7 +287,7 @@ object UpdateChecker {
         val request = DownloadManager.Request(downloadUrl.toUri()).setTitle(activity.getString(R.string.app_name))
             .setDescription(activity.getString(R.string.downloading_update))
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            .setDestinationInExternalFilesDir(activity, Environment.DIRECTORY_DOWNLOADS, fileName)
+            .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
         val downloadManager = activity.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
         currentDownloadId = downloadManager.enqueue(request)
         Toast.makeText(activity, R.string.downloading_update, Toast.LENGTH_SHORT).show()
