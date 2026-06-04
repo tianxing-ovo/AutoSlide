@@ -176,9 +176,18 @@ class FloatingWindowService : Service() {
         if (abs(deltaX) < TOUCH_SLOP && abs(deltaY) < TOUCH_SLOP) {
             return
         }
+        // 获取屏幕宽高和悬浮窗宽高
+        val displayMetrics = resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels
+        val screenHeight = displayMetrics.heightPixels
+        val viewWidth = rootView.width
+        val viewHeight = rootView.height
+        // 计算目标位置
+        val targetX = (initialX + deltaX).toInt()
+        val targetY = (initialY + deltaY).toInt()
+        layoutParams.x = targetX.coerceIn(0, (screenWidth - viewWidth).coerceAtLeast(0))
+        layoutParams.y = targetY.coerceIn(0, (screenHeight - viewHeight).coerceAtLeast(0))
         // 更新悬浮窗位置
-        layoutParams.x = (initialX + deltaX).toInt()
-        layoutParams.y = (initialY + deltaY).toInt()
         windowManager.updateViewLayout(rootView, layoutParams)
     }
 

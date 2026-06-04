@@ -9,7 +9,6 @@ import android.content.IntentFilter
 import android.os.Environment
 import android.os.SystemClock
 import android.provider.Settings
-import android.util.Base64
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -48,7 +47,7 @@ object UpdateChecker {
     )
 
     private const val UPDATE_INFO_URL =
-        "https://api.github.com/repos/tianxing-ovo/AutoSlide/contents/update.json?ref=master"
+        "https://raw.githubusercontent.com/tianxing-ovo/AutoSlide/master/update.json"
 
     // 用于加速下载的GitHub代理前缀
     private const val GITHUB_PROXY_PREFIX = "https://ghfast.top/"
@@ -128,7 +127,7 @@ object UpdateChecker {
      */
     private suspend fun fetchUpdateInfo(context: Context): Result<UpdateInfo?> = withContext(ioDispatcher) {
         runCatching {
-            val url = URI.create(UPDATE_INFO_URL).toURL()
+            val url = URI.create(proxyGitHubUrl(UPDATE_INFO_URL)).toURL()
             val connection = url.openConnection() as HttpURLConnection
             try {
                 connection.requestMethod = "GET"
@@ -139,12 +138,7 @@ object UpdateChecker {
                     "HTTP ${connection.responseCode}"
                 }
                 val responseStr = connection.inputStream.bufferedReader().use { it.readText() }
-                // Base64解码content字段
-                val apiResponse = JSONObject(responseStr)
-                val encodedContent = apiResponse.optString("content", "").replace("\n", "")
-                val decodedContent = String(Base64.decode(encodedContent, Base64.DEFAULT))
-                // 解析实际的update.json
-                val json = JSONObject(decodedContent)
+                val json = JSONObject(responseStr)
                 val remoteVersionCode = json.optInt("versionCode", 0)
                 val localVersionCode = getLocalVersionCode(context)
                 if (remoteVersionCode > localVersionCode) {

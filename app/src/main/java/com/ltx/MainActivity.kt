@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "MainActivity"
         private const val SHIZUKU_PERMISSION_REQUEST_CODE = 100
+
         // 无障碍授权方式选项常量
         private const val OPTION_MANUAL = 0
         private const val OPTION_SHIZUKU = 1
@@ -77,17 +78,16 @@ class MainActivity : AppCompatActivity() {
     private var pendingShizukuOnFailed: (() -> Unit)? = null
 
     /* Shizuku权限请求监听器 */
-    private val shizukuPermissionListener =
-        Shizuku.OnRequestPermissionResultListener { requestCode, grantResult ->
-            if (requestCode == SHIZUKU_PERMISSION_REQUEST_CODE && grantResult == PackageManager.PERMISSION_GRANTED) {
-                pendingShizukuOnGranted?.invoke()
-            } else {
-                Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
-                pendingShizukuOnFailed?.invoke()
-            }
-            pendingShizukuOnGranted = null
-            pendingShizukuOnFailed = null
+    private val shizukuPermissionListener = Shizuku.OnRequestPermissionResultListener { requestCode, grantResult ->
+        if (requestCode == SHIZUKU_PERMISSION_REQUEST_CODE && grantResult == PackageManager.PERMISSION_GRANTED) {
+            pendingShizukuOnGranted?.invoke()
+        } else {
+            Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
+            pendingShizukuOnFailed?.invoke()
         }
+        pendingShizukuOnGranted = null
+        pendingShizukuOnFailed = null
+    }
 
     /**
      * 初始化Activity界面布局和事件绑定
@@ -165,10 +165,8 @@ class MainActivity : AppCompatActivity() {
         // 恢复停顿时间
         val pauseTime = preferences.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME).coerceAtLeast(1)
         // 恢复随机停顿时间范围
-        val minPauseTime =
-            preferences.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME).coerceAtLeast(1)
-        val maxPauseTime =
-            preferences.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME).coerceAtLeast(1)
+        val minPauseTime = preferences.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME).coerceAtLeast(1)
+        val maxPauseTime = preferences.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME).coerceAtLeast(1)
         binding.speedSlider.value = speed.toFloat()
         binding.speedSlider.setCustomThumbDrawable(R.drawable.slider_thumb_circular)
         when (pauseMode) {
@@ -181,8 +179,7 @@ class MainActivity : AppCompatActivity() {
         binding.pauseTimeSlider.value = pauseTime.toFloat()
         // 动态调整随机停顿范围滑块的最大值并排序赋值
         binding.randomPauseTimeSlider.valueTo = maxOf(10, minPauseTime, maxPauseTime).toFloat()
-        binding.randomPauseTimeSlider.values =
-            listOf(minPauseTime.toFloat(), maxPauseTime.toFloat()).sorted()
+        binding.randomPauseTimeSlider.values = listOf(minPauseTime.toFloat(), maxPauseTime.toFloat()).sorted()
         binding.pauseTimeSlider.setCustomThumbDrawable(R.drawable.slider_thumb_circular)
         binding.randomPauseTimeSlider.setCustomThumbDrawable(R.drawable.slider_thumb_circular)
         updatePauseTimeVisibility(pauseMode)
@@ -234,8 +231,7 @@ class MainActivity : AppCompatActivity() {
             val values = slider.values
             val min = values[0].toInt()
             val max = values[1].toInt()
-            binding.pauseTimeValueText.text =
-                getString(R.string.pause_time_range_format, min, max)
+            binding.pauseTimeValueText.text = getString(R.string.pause_time_range_format, min, max)
             if (fromUser) {
                 preferences.edit {
                     putInt(KEY_MIN_PAUSE_TIME, min)
@@ -512,8 +508,8 @@ class MainActivity : AppCompatActivity() {
     private fun grantPermissionViaShizuku() {
         runShizukuCommand(
             command = arrayOf(
-                "/system/bin/pm", "grant", packageName, Manifest.permission.WRITE_SECURE_SETTINGS
-            ), onSuccess = {
+            "/system/bin/pm", "grant", packageName, Manifest.permission.WRITE_SECURE_SETTINGS
+        ), onSuccess = {
             binding.accessibilityServicePermissionSwitch.post {
                 if (hasWriteSecureSettingsPermission()) {
                     changeAccessibilityServicePermissionState(enable = true)
@@ -526,7 +522,7 @@ class MainActivity : AppCompatActivity() {
                     binding.accessibilityServicePermissionSwitch.isChecked = false
                 }
             }
-            }, onFailure = { binding.accessibilityServicePermissionSwitch.isChecked = false })
+        }, onFailure = { binding.accessibilityServicePermissionSwitch.isChecked = false })
     }
 
     /**
@@ -536,27 +532,31 @@ class MainActivity : AppCompatActivity() {
      * @param onSuccess 命令执行成功时的回调
      * @param onFailure 命令执行失败时的回调
      */
-    private fun runShizukuCommand(
-        command: Array<String>, onSuccess: () -> Unit, onFailure: () -> Unit
-    ) {
-        try {
-            val result = executeShizukuCommand(*command)
-            if (result.exitCode != 0) {
-                Log.e(
-                    TAG,
-                    "Shizuku command failed: cmd=${command.joinToString(" ")}, exitCode=${result.exitCode}, stdout=${result.stdout}, stderr=${result.stderr}"
-                )
-                Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
-                onFailure()
-                return
+    private fun runShizukuCommand(command: Array<String>, onSuccess: () -> Unit, onFailure: () -> Unit) {
+        lifecycleScope.launch(ioDispatcher) {
+            val result = runCatching { executeShizukuCommand(*command) }
+            withContext(mainDispatcher) {
+                if (!isFinishing && !isDestroyed) {
+                    result.onSuccess { res ->
+                        if (res.exitCode != 0) {
+                            Log.e(
+                                TAG,
+                                "Shizuku command failed: cmd=${command.joinToString(" ")}, exitCode=${res.exitCode}, stdout=${res.stdout}, stderr=${res.stderr}"
+                            )
+                            Toast.makeText(this@MainActivity, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
+                            onFailure()
+                        } else {
+                            onSuccess()
+                        }
+                    }.onFailure { exception ->
+                        Log.e(
+                            TAG, "Shizuku command execution failed: cmd=${command.joinToString(" ")}", exception
+                        )
+                        Toast.makeText(this@MainActivity, R.string.shizuku_exception, Toast.LENGTH_SHORT).show()
+                        onFailure()
+                    }
+                }
             }
-            onSuccess()
-        } catch (exception: Exception) {
-            Log.e(
-                TAG, "Shizuku command execution failed: cmd=${command.joinToString(" ")}", exception
-            )
-            Toast.makeText(this, R.string.shizuku_exception, Toast.LENGTH_SHORT).show()
-            onFailure()
         }
     }
 
