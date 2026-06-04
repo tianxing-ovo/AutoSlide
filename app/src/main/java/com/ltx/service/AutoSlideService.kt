@@ -52,18 +52,19 @@ class AutoSlideService : AccessibilityService() {
     private var isRunning = false
 
     /* 自动滑动主循环 */
-    private val slideRunnable = object : Runnable {
-        override fun run() {
-            if (!isRunning) {
-                return
-            }
-            // 计算手势持续时间
-            val gestureDurationMillis = calculateGestureDurationMillis()
-            // 执行滑动
-            performSlideByDirection(gestureDurationMillis)
-            // 计算并设置下一次滑动时间
-            handler.postDelayed(this, gestureDurationMillis + calculatePauseDelayMillis())
+    private val slideRunnable = Runnable { runSlide() }
+
+    /* 执行一次自动滑动 */
+    private fun runSlide() {
+        if (!isRunning) {
+            return
         }
+        // 计算手势持续时间
+        val gestureDurationMillis = calculateGestureDurationMillis()
+        // 执行滑动
+        performSlideByDirection(gestureDurationMillis)
+        // 计算并设置下一次滑动时间
+        handler.postDelayed(slideRunnable, gestureDurationMillis + calculatePauseDelayMillis())
     }
 
     /* 息屏时强制停止滑动 */

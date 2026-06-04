@@ -18,6 +18,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -52,7 +53,7 @@ object UpdateChecker {
     // 用于加速下载的GitHub代理前缀
     private const val GITHUB_PROXY_PREFIX = "https://ghfast.top/"
     private const val TAG = "UpdateChecker"
-
+    var ioDispatcher: CoroutineDispatcher = Dispatchers.IO
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var pendingUpdateInfo: UpdateInfo? = null
     private var updateDialog: AlertDialog? = null
@@ -87,22 +88,36 @@ object UpdateChecker {
         val appContext = activity.applicationContext
         scope.launch {
             fetchUpdateInfo(appContext).onSuccess { updateInfo ->
-                val act = activityRef.get() ?: return@launch
-                if (act.isFinishing || act.isDestroyed) return@launch
-                if (updateInfo != null) {
-                    pendingUpdateInfo = updateInfo
-                    tryShowPendingUpdateDialog(act)
-                } else if (showToastOnLatest) {
-                    Toast.makeText(act, R.string.already_latest_version, Toast.LENGTH_SHORT).show()
-                }
+                handleUpdateResult(activityRef, updateInfo, showToastOnLatest)
             }.onFailure {
-                Log.e(TAG, "check update failed", it)
-                if (!showToastOnLatest) return@onFailure
-                val act = activityRef.get() ?: return@onFailure
-                if (act.isFinishing || act.isDestroyed) return@onFailure
-                Toast.makeText(act, R.string.check_update_failed, Toast.LENGTH_SHORT).show()
+                handleUpdateFailure(activityRef, it, showToastOnLatest)
             }
         }
+    }
+
+    /* 处理更新检查成功结果 */
+    private fun handleUpdateResult(
+        activityRef: WeakReference<Activity>, updateInfo: UpdateInfo?, showToastOnLatest: Boolean
+    ) {
+        val act = activityRef.get() ?: return
+        if (act.isFinishing || act.isDestroyed) return
+        if (updateInfo != null) {
+            pendingUpdateInfo = updateInfo
+            tryShowPendingUpdateDialog(act)
+        } else if (showToastOnLatest) {
+            Toast.makeText(act, R.string.already_latest_version, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /* 处理更新检查失败结果 */
+    private fun handleUpdateFailure(
+        activityRef: WeakReference<Activity>, error: Throwable, showToastOnLatest: Boolean
+    ) {
+        Log.e(TAG, "check update failed", error)
+        if (!showToastOnLatest) return
+        val act = activityRef.get() ?: return
+        if (act.isFinishing || act.isDestroyed) return
+        Toast.makeText(act, R.string.check_update_failed, Toast.LENGTH_SHORT).show()
     }
 
     /**
@@ -111,44 +126,41 @@ object UpdateChecker {
      * @param context 上下文
      * @return 更新信息
      */
-    private suspend fun fetchUpdateInfo(context: Context): Result<UpdateInfo?> =
-        withContext(Dispatchers.IO) {
-            runCatching {
-                val url = URI.create(UPDATE_INFO_URL).toURL()
-                val connection = url.openConnection() as HttpURLConnection
-                try {
-                    connection.requestMethod = "GET"
-                    connection.connectTimeout = 5000
-                    connection.readTimeout = 5000
-                    connection.setRequestProperty("User-Agent", "AutoSlide-App")
-                    check(connection.responseCode == HttpURLConnection.HTTP_OK) {
-                        "HTTP ${connection.responseCode}"
-                    }
-                    val responseStr = connection.inputStream.bufferedReader().use { it.readText() }
-                    // Base64解码content字段
-                    val apiResponse = JSONObject(responseStr)
-                    val encodedContent =
-                        apiResponse.optString("content", "").replace("\n", "")
-                    val decodedContent =
-                        String(Base64.decode(encodedContent, Base64.DEFAULT))
-                    // 解析实际的update.json
-                    val json = JSONObject(decodedContent)
-                    val remoteVersionCode = json.optInt("versionCode", 0)
-                    val localVersionCode = getLocalVersionCode(context)
-                    if (remoteVersionCode > localVersionCode) {
-                        UpdateInfo(
-                            versionName = json.optString("versionName", ""),
-                            updateLog = json.optString("updateLog", ""),
-                            downloadUrl = proxyGitHubUrl(json.optString("downloadUrl", ""))
-                        )
-                    } else {
-                        null
-                    }
-                } finally {
-                    connection.disconnect()
+    private suspend fun fetchUpdateInfo(context: Context): Result<UpdateInfo?> = withContext(ioDispatcher) {
+        runCatching {
+            val url = URI.create(UPDATE_INFO_URL).toURL()
+            val connection = url.openConnection() as HttpURLConnection
+            try {
+                connection.requestMethod = "GET"
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
+                connection.setRequestProperty("User-Agent", "AutoSlide-App")
+                check(connection.responseCode == HttpURLConnection.HTTP_OK) {
+                    "HTTP ${connection.responseCode}"
                 }
+                val responseStr = connection.inputStream.bufferedReader().use { it.readText() }
+                // Base64解码content字段
+                val apiResponse = JSONObject(responseStr)
+                val encodedContent = apiResponse.optString("content", "").replace("\n", "")
+                val decodedContent = String(Base64.decode(encodedContent, Base64.DEFAULT))
+                // 解析实际的update.json
+                val json = JSONObject(decodedContent)
+                val remoteVersionCode = json.optInt("versionCode", 0)
+                val localVersionCode = getLocalVersionCode(context)
+                if (remoteVersionCode > localVersionCode) {
+                    UpdateInfo(
+                        versionName = json.optString("versionName", ""),
+                        updateLog = json.optString("updateLog", ""),
+                        downloadUrl = proxyGitHubUrl(json.optString("downloadUrl", ""))
+                    )
+                } else {
+                    null
+                }
+            } finally {
+                connection.disconnect()
             }
         }
+    }
 
     /**
      * 当宿主页面恢复可见时尝试展示待处理更新弹窗
@@ -166,61 +178,21 @@ object UpdateChecker {
      */
     private fun tryShowPendingUpdateDialog(activity: Activity) {
         val updateInfo = pendingUpdateInfo ?: return
-        if (updateDialog?.isShowing == true) {
-            Log.d(TAG, "dialog already showing, skip")
-            return
-        }
-        if (activity.isFinishing || activity.isDestroyed) {
-            Log.d(TAG, "activity finishing/destroyed, skip dialog")
-            return
-        }
-        val lifecycleOwner = activity as? LifecycleOwner
-        if (lifecycleOwner != null && !lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
-            Log.d(TAG, "activity not resumed, skip dialog")
-            return
-        }
+        if (!canShowDialog(activity)) return
         Log.d(TAG, "show update dialog")
+        val lifecycleOwner = activity as? LifecycleOwner
         updateDialog = AlertDialog.Builder(activity)
-            .setTitle(activity.getString(R.string.update_found_title, updateInfo.versionName))
-            .setMessage(
+            .setTitle(activity.getString(R.string.update_found_title, updateInfo.versionName)).setMessage(
                 updateInfo.updateLog.ifEmpty {
                     activity.getString(R.string.update_found_default_message)
-                }).setPositiveButton(R.string.update_now, null)
-            .setNegativeButton(R.string.cancel, null).setCancelable(false).create().also { dialog ->
+                }).setPositiveButton(R.string.update_now, null).setNegativeButton(R.string.cancel, null)
+            .setCancelable(false).create().also { dialog ->
                 val shownAt = SystemClock.elapsedRealtime()
-                val lifecycleObserver = object : LifecycleEventObserver {
-                    override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-                        if (event == Lifecycle.Event.ON_DESTROY) {
-                            dialog.dismiss()
-                            if (updateDialog == dialog) {
-                                updateDialog = null
-                            }
-                            source.lifecycle.removeObserver(this)
-                        }
-                    }
-                }
+                val lifecycleObserver = createLifecycleObserver(dialog)
                 lifecycleOwner?.lifecycle?.addObserver(lifecycleObserver)
                 dialog.setCanceledOnTouchOutside(false)
                 dialog.setOnShowListener {
-                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-                        val shownDuration = SystemClock.elapsedRealtime() - shownAt
-                        Log.d(TAG, "positive clicked after ${shownDuration}ms")
-                        pendingUpdateInfo = null
-                        dialog.dismiss()
-                        downloadAndInstall(activity, updateInfo.downloadUrl, updateInfo.versionName)
-                    }
-                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener {
-                        val shownDuration = SystemClock.elapsedRealtime() - shownAt
-                        if (shownDuration < 500L) {
-                            Log.d(
-                                TAG, "ignore early negative click after ${shownDuration}ms"
-                            )
-                            return@setOnClickListener
-                        }
-                        Log.d(TAG, "negative clicked after ${shownDuration}ms")
-                        pendingUpdateInfo = null
-                        dialog.dismiss()
-                    }
+                    setupDialogButtons(dialog, shownAt, activity, updateInfo)
                 }
                 dialog.setOnDismissListener {
                     lifecycleOwner?.lifecycle?.removeObserver(lifecycleObserver)
@@ -235,6 +207,72 @@ object UpdateChecker {
     }
 
     /**
+     * 检查是否可以展示弹窗
+     *
+     * @param activity 活动
+     * @return 是否可以展示弹窗
+     */
+    private fun canShowDialog(activity: Activity): Boolean {
+        if (updateDialog?.isShowing == true) {
+            Log.d(TAG, "dialog already showing, skip")
+            return false
+        }
+        if (activity.isFinishing || activity.isDestroyed) {
+            Log.d(TAG, "activity finishing/destroyed, skip dialog")
+            return false
+        }
+        val lifecycleOwner = activity as? LifecycleOwner
+        if (lifecycleOwner != null && !lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            Log.d(TAG, "activity not resumed, skip dialog")
+            return false
+        }
+        return true
+    }
+
+    /**
+     * 创建生命周期观察者(销毁时关闭弹窗)
+     *
+     * @param dialog 对话框
+     * @return 生命周期观察者
+     */
+    private fun createLifecycleObserver(dialog: AlertDialog) = LifecycleEventObserver { _, event ->
+        if (event == Lifecycle.Event.ON_DESTROY) {
+            dialog.dismiss()
+            if (updateDialog == dialog) {
+                updateDialog = null
+            }
+        }
+    }
+
+    /**
+     * 设置对话框按钮
+     *
+     * @param dialog 对话框
+     * @param shownAt 显示时间
+     * @param activity 活动
+     * @param updateInfo 更新信息
+     */
+    private fun setupDialogButtons(dialog: AlertDialog, shownAt: Long, activity: Activity, updateInfo: UpdateInfo) {
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val shownDuration = SystemClock.elapsedRealtime() - shownAt
+            Log.d(TAG, "positive clicked after ${shownDuration}ms")
+            pendingUpdateInfo = null
+            dialog.dismiss()
+            downloadAndInstall(activity, updateInfo.downloadUrl, updateInfo.versionName)
+        }
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener {
+            val shownDuration = SystemClock.elapsedRealtime() - shownAt
+            if (shownDuration < 500L) {
+                Log.d(TAG, "ignore early negative click after ${shownDuration}ms")
+                return@setOnClickListener
+            }
+            Log.d(TAG, "negative clicked after ${shownDuration}ms")
+            pendingUpdateInfo = null
+            dialog.dismiss()
+        }
+    }
+
+    /**
      * 使用DownloadManager下载APK并在完成后自动安装
      *
      * @param activity 活动
@@ -244,18 +282,15 @@ object UpdateChecker {
     private fun downloadAndInstall(activity: Activity, downloadUrl: String, versionName: String) {
         // 检查是否有安装未知应用的权限
         if (!activity.packageManager.canRequestPackageInstalls()) {
-            Toast.makeText(activity, R.string.install_permission_required, Toast.LENGTH_SHORT)
-                .show()
+            Toast.makeText(activity, R.string.install_permission_required, Toast.LENGTH_SHORT).show()
             val intent = Intent(
-                Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                "package:${activity.packageName}".toUri()
+                Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, "package:${activity.packageName}".toUri()
             )
             activity.startActivity(intent)
             return
         }
         val fileName = "AutoSlide-v$versionName.apk"
-        val request = DownloadManager.Request(downloadUrl.toUri())
-            .setTitle(activity.getString(R.string.app_name))
+        val request = DownloadManager.Request(downloadUrl.toUri()).setTitle(activity.getString(R.string.app_name))
             .setDescription(activity.getString(R.string.downloading_update))
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
             .setDestinationInExternalFilesDir(activity, Environment.DIRECTORY_DOWNLOADS, fileName)
