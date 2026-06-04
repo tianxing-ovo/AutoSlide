@@ -24,7 +24,6 @@ import com.ltx.DIRECTION_RIGHT
 import com.ltx.DIRECTION_UP
 import com.ltx.KEY_MAX_PAUSE_TIME
 import com.ltx.KEY_MIN_PAUSE_TIME
-import com.ltx.KEY_PAUSE_MODE
 import com.ltx.KEY_PAUSE_TIME
 import com.ltx.KEY_SPEED
 import com.ltx.MainActivity
@@ -115,14 +114,18 @@ class FloatingWindowService : Service() {
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         if (::rootView.isInitialized && ::layoutParams.isInitialized) {
-            val displayMetrics = resources.displayMetrics
-            val screenWidth = displayMetrics.widthPixels
-            val screenHeight = displayMetrics.heightPixels
-            val viewWidth = rootView.width
-            val viewHeight = rootView.height
-            layoutParams.x = layoutParams.x.coerceIn(0, (screenWidth - viewWidth).coerceAtLeast(0))
-            layoutParams.y = layoutParams.y.coerceIn(0, (screenHeight - viewHeight).coerceAtLeast(0))
-            windowManager.updateViewLayout(rootView, layoutParams)
+            rootView.post {
+                if (::rootView.isInitialized && ::layoutParams.isInitialized) {
+                    val displayMetrics = resources.displayMetrics
+                    val screenWidth = displayMetrics.widthPixels
+                    val screenHeight = displayMetrics.heightPixels
+                    val viewWidth = rootView.width
+                    val viewHeight = rootView.height
+                    layoutParams.x = layoutParams.x.coerceIn(0, (screenWidth - viewWidth).coerceAtLeast(0))
+                    layoutParams.y = layoutParams.y.coerceIn(0, (screenHeight - viewHeight).coerceAtLeast(0))
+                    windowManager.updateViewLayout(rootView, layoutParams)
+                }
+            }
         }
     }
 
@@ -296,14 +299,13 @@ class FloatingWindowService : Service() {
         minimize()
         // 从本地配置文件读取当前设置
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        val intent = Intent(this, AutoSlideService::class.java).apply {
-            putExtra(KEY_SPEED, prefs.getInt(KEY_SPEED, DEFAULT_SPEED))
-            putExtra(KEY_PAUSE_MODE, prefs.getPauseMode())
-            putExtra(KEY_PAUSE_TIME, prefs.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME))
-            putExtra(KEY_MIN_PAUSE_TIME, prefs.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME))
-            putExtra(KEY_MAX_PAUSE_TIME, prefs.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME))
-        }
-        startService(intent)
+        AutoSlideService.getInstance()?.startSlideWithConfig(
+            speedVal = prefs.getInt(KEY_SPEED, DEFAULT_SPEED),
+            pauseModeVal = prefs.getPauseMode(),
+            pauseTimeVal = prefs.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME),
+            minPauseVal = prefs.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME),
+            maxPauseVal = prefs.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME)
+        )
     }
 
     /* 返回主界面 */

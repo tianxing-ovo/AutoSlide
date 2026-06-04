@@ -45,6 +45,7 @@ import kotlin.math.roundToLong
 class AutoSlideService : AccessibilityService() {
 
     private val handler = Handler(Looper.getMainLooper())
+    private var runGeneration = 0
     private var isScreenOffReceiverRegistered = false
     private var speed = DEFAULT_SPEED
     private var pauseMode = PAUSE_MODE_NONE
@@ -153,6 +154,26 @@ class AutoSlideService : AccessibilityService() {
         return START_STICKY
     }
 
+   /**
+    * 根据配置启动自动滑动
+    *
+    * @param speedVal 速度值
+    * @param pauseModeVal 停顿模式
+    * @param pauseTimeVal 固定停顿时间
+    * @param minPauseVal 随机停顿下限
+    * @param maxPauseVal 随机停顿上限
+    */
+    fun startSlideWithConfig(
+        speedVal: Int, pauseModeVal: Int, pauseTimeVal: Int, minPauseVal: Int, maxPauseVal: Int
+    ) {
+        speed = speedVal.coerceIn(1, 100)
+        pauseMode = pauseModeVal
+        pauseTime = pauseTimeVal.coerceAtLeast(1)
+        minPauseTime = minPauseVal.coerceAtLeast(1)
+        maxPauseTime = maxPauseVal.coerceAtLeast(1)
+        startAutoSlide()
+    }
+
     /* 服务连接完成后初始化屏幕参数并注册单例 */
     override fun onServiceConnected() {
         super.onServiceConnected()
@@ -179,6 +200,7 @@ class AutoSlideService : AccessibilityService() {
         }
         isRunning = false
         isGestureActive = false
+        runGeneration++
         handler.removeCallbacks(slideRunnable)
     }
 
@@ -275,9 +297,15 @@ class AutoSlideService : AccessibilityService() {
     private fun startAutoSlide() {
         isRunning = true
         isGestureActive = false
+        runGeneration++
+        val currentGen = runGeneration
         handler.removeCallbacks(slideRunnable)
         // 延迟300ms执行第一次滑动(等待悬浮窗完成最小化动画)(防止悬浮窗拦截手势)
-        handler.postDelayed(slideRunnable, 300L)
+        handler.postDelayed({
+            if (currentGen == runGeneration && isRunning) {
+                runSlide()
+            }
+        }, 300L)
     }
 
     /**
@@ -362,13 +390,15 @@ class AutoSlideService : AccessibilityService() {
         ).build()
         // 设置手势活动状态并分发手势
         isGestureActive = true
+        val currentGen = runGeneration
         dispatchGesture(gesture, object : GestureResultCallback() {
             override fun onCompleted(gestureDescription: GestureDescription?) {
                 isGestureActive = false
-                if (isRunning) {
+                if (isRunning && currentGen == runGeneration) {
                     handler.postDelayed(slideRunnable, calculatePauseDelayMillis())
                 }
             }
+
             override fun onCancelled(gestureDescription: GestureDescription?) {
                 onCompleted(gestureDescription)
             }
