@@ -34,7 +34,9 @@ import com.ltx.SlideEvent
 import com.ltx.SlideEventHub
 import java.lang.ref.WeakReference
 import kotlin.math.ln
+import java.security.SecureRandom
 import kotlin.math.roundToLong
+import kotlin.random.asKotlinRandom
 
 /**
  * 自动滑动无障碍服务
@@ -44,6 +46,7 @@ import kotlin.math.roundToLong
 @SuppressLint("AccessibilityPolicy")
 class AutoSlideService : AccessibilityService() {
 
+    private val secureRandom = SecureRandom().asKotlinRandom()
     private val handler = Handler(Looper.getMainLooper())
     private var runGeneration = 0
     private var isScreenOffReceiverRegistered = false
@@ -341,7 +344,7 @@ class AutoSlideService : AccessibilityService() {
             val minMs = minPauseTime.coerceAtLeast(0) * 1000L
             val maxMs = maxPauseTime.coerceAtLeast(0) * 1000L
             val (lo, hi) = minOf(minMs, maxMs) to maxOf(minMs, maxMs)
-            if (lo == hi) lo else (lo..hi).random()
+            if (lo == hi) lo else (lo..hi).random(secureRandom)
         }
 
         else -> NO_PAUSE_GAP_MS
@@ -362,10 +365,10 @@ class AutoSlideService : AccessibilityService() {
         val density = resources.displayMetrics.density
         val maxOffset = 10f * density
         // 计算起止坐标偏移量
-        val startXOffset = ((Math.random() * 2 - 1) * maxOffset).toFloat()
-        val startYOffset = ((Math.random() * 2 - 1) * maxOffset).toFloat()
-        val endXOffset = ((Math.random() * 2 - 1) * maxOffset).toFloat()
-        val endYOffset = ((Math.random() * 2 - 1) * maxOffset).toFloat()
+        val startXOffset = ((secureRandom.nextDouble() * 2 - 1) * maxOffset).toFloat()
+        val startYOffset = ((secureRandom.nextDouble() * 2 - 1) * maxOffset).toFloat()
+        val endXOffset = ((secureRandom.nextDouble() * 2 - 1) * maxOffset).toFloat()
+        val endYOffset = ((secureRandom.nextDouble() * 2 - 1) * maxOffset).toFloat()
         // 计算实际起止坐标
         val actualStartX = startX + startXOffset
         val actualStartY = startY + startYOffset
@@ -377,8 +380,8 @@ class AutoSlideService : AccessibilityService() {
         // 计算控制点坐标偏移量
         val controlOffset = 15f * density
         // 计算控制点坐标
-        val controlX = midX + ((Math.random() * 2 - 1) * controlOffset).toFloat()
-        val controlY = midY + ((Math.random() * 2 - 1) * controlOffset).toFloat()
+        val controlX = midX + ((secureRandom.nextDouble() * 2 - 1) * controlOffset).toFloat()
+        val controlY = midY + ((secureRandom.nextDouble() * 2 - 1) * controlOffset).toFloat()
         // 构造贝塞尔曲线路径模拟真人滑动的自然微弯轨迹
         val path = Path().apply {
             moveTo(actualStartX, actualStartY)
