@@ -11,7 +11,6 @@ import android.util.Log
 import android.view.ContextThemeWrapper
 import android.view.Gravity
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import com.ltx.DEFAULT_MAX_PAUSE_TIME
@@ -37,7 +36,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlin.math.abs
 
 /**
  * 悬浮窗服务
@@ -56,11 +54,6 @@ class FloatingWindowService : Service() {
     private var initialTouchX = 0f
     private var initialTouchY = 0f
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-
-
-    companion object {
-        private const val TOUCH_SLOP = 10f
-    }
 
     /* 绑定服务 */
     override fun onBind(intent: Intent?): IBinder? = null
@@ -159,83 +152,35 @@ class FloatingWindowService : Service() {
         }
     }
 
-    /* 注册拖拽事件处理 */
-    @SuppressLint("ClickableViewAccessibility")
+    /* 设置拖拽事件处理 */
     private fun setupDragging() {
-        val listener = View.OnTouchListener { view, event ->
-            event ?: return@OnTouchListener false
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    onTouchDown(event)
-                    true
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    onTouchMove(event)
-                    true
-                }
-                MotionEvent.ACTION_UP -> {
-                    onTouchUp(view, event)
-                    true
-                }
-                else -> false
+        val draggableRoot = rootView as? DraggableLinearLayout ?: return
+        draggableRoot.setOnDragListener(object : DraggableLinearLayout.OnDragListener {
+            override fun onDragDown(rawX: Float, rawY: Float) {
+                initialX = layoutParams.x.toFloat()
+                initialY = layoutParams.y.toFloat()
+                initialTouchX = rawX
+                initialTouchY = rawY
             }
-        }
-        // 为根视图和展开按钮注册触摸事件
-        rootView.setOnTouchListener(listener)
-        expandButton.setOnTouchListener(listener)
-    }
 
-    /**
-     * 触摸按下时记录初始坐标
-     *
-     * @param event 触摸事件
-     */
-    private fun onTouchDown(event: MotionEvent) {
-        initialX = layoutParams.x.toFloat()
-        initialY = layoutParams.y.toFloat()
-        initialTouchX = event.rawX
-        initialTouchY = event.rawY
-    }
-
-    /**
-     * 触摸移动时更新悬浮窗位置
-     *
-     * @param event 触摸事件
-     */
-    private fun onTouchMove(event: MotionEvent) {
-        val deltaX = event.rawX - initialTouchX
-        val deltaY = event.rawY - initialTouchY
-        if (abs(deltaX) < TOUCH_SLOP && abs(deltaY) < TOUCH_SLOP) {
-            return
-        }
-        // 获取屏幕宽高和悬浮窗宽高
-        val displayMetrics = resources.displayMetrics
-        val screenWidth = displayMetrics.widthPixels
-        val screenHeight = displayMetrics.heightPixels
-        val viewWidth = rootView.width
-        val viewHeight = rootView.height
-        // 计算目标位置
-        val targetX = (initialX + deltaX).toInt()
-        val targetY = (initialY + deltaY).toInt()
-        layoutParams.x = targetX.coerceIn(0, (screenWidth - viewWidth).coerceAtLeast(0))
-        layoutParams.y = targetY.coerceIn(0, (screenHeight - viewHeight).coerceAtLeast(0))
-        // 更新悬浮窗位置
-        windowManager.updateViewLayout(rootView, layoutParams)
-    }
-
-    /**
-     * 触摸抬起时按位移阈值判断是否触发点击事件
-     *
-     * @param view 当前触发视图
-     * @param event 触摸事件
-     */
-    private fun onTouchUp(view: View, event: MotionEvent) {
-        if (
-            abs(event.rawX - initialTouchX) < TOUCH_SLOP &&
-            abs(event.rawY - initialTouchY) < TOUCH_SLOP
-        ) {
-            view.performClick()
-        }
+            override fun onDragMove(rawX: Float, rawY: Float) {
+                val deltaX = rawX - initialTouchX
+                val deltaY = rawY - initialTouchY
+                // 获取屏幕宽高和悬浮窗宽高
+                val displayMetrics = resources.displayMetrics
+                val screenWidth = displayMetrics.widthPixels
+                val screenHeight = displayMetrics.heightPixels
+                val viewWidth = rootView.width
+                val viewHeight = rootView.height
+                // 计算目标位置
+                val targetX = (initialX + deltaX).toInt()
+                val targetY = (initialY + deltaY).toInt()
+                layoutParams.x = targetX.coerceIn(0, (screenWidth - viewWidth).coerceAtLeast(0))
+                layoutParams.y = targetY.coerceIn(0, (screenHeight - viewHeight).coerceAtLeast(0))
+                // 更新悬浮窗位置
+                windowManager.updateViewLayout(rootView, layoutParams)
+            }
+        })
     }
 
     /* 绑定所有控制按钮事件 */

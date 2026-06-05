@@ -1,7 +1,7 @@
 # 安卓自动滑动器APP [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-2.3-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
+[![Version](https://img.shields.io/badge/Version-2.4-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/total)](https://github.com/tianxing-ovo/AutoSlide/releases)
 [![Latest Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/latest/total)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 
@@ -26,6 +26,10 @@
 
 ## 最近更新
 
+- `v2.4`
+  - 优化悬浮窗交互体验，支持在展开状态下面板任意位置（包括按钮上）直接拖拽移动，完美解决触控拦截冲突
+  - 修复自定义悬浮窗容器在 Android 无障碍环境下的 performClick 规范化警告，增强系统兼容性与合规性
+  - 升级核心随机数生成器为 SecureRandom 安全随机算法，彻底解决 SonarQube 安全审计热点 (kotlin:S2245)
 - `v2.3`
   - 重构更新检测与界面逻辑，全面迁移至 Kotlin 协程 (Coroutines) 异步处理
   - 优化权限监控与生命周期绑定，彻底消除潜在的页面内存泄漏隐患
@@ -35,12 +39,6 @@
   - 开启 R8 代码混淆与资源缩减，大幅缩小 APK 体积
   - 延迟 Shizuku 权限监听注册，优化 APP 冷启动渲染速度
   - 集成 GitHub 代理下载加速（ghfast.top），解决国内更新包下载缓慢问题
-- `v2.1`
-  - 优化横竖屏切换下自动滑动的坐标计算逻辑
-  - 增强更新检测的生命周期管理，解决潜在的内存泄露风险
-  - 增强悬浮窗在多窗口环境下的防崩溃处理，提升运行稳定性
-  - 移除 Shizuku 授权中不稳定的反射逻辑，提升高版本 Android 兼容性
-
 ## 截图展示
 
 ![](assets/screenshot.png)

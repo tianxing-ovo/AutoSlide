@@ -1,7 +1,7 @@
 # Android Auto-Slide App [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-2.3-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
+[![Version](https://img.shields.io/badge/Version-2.4-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/total)](https://github.com/tianxing-ovo/AutoSlide/releases)
 [![Latest Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/latest/total)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 
@@ -26,6 +26,10 @@ A simple and efficient auto-slide solution for Android devices, ideal for automa
 
 ## Recent Updates
 
+- `v2.4`
+  - Optimized floating window interaction, allowing users to drag the expanded panel from any position (including on top of buttons) without accidental clicks
+  - Resolved accessibility compliance warnings by overriding `performClick()` in the custom layout container
+  - Upgraded the PRNG implementation to `SecureRandom` to pass SonarQube security audit checks (kotlin:S2245)
 - `v2.3`
   - Refactored update checker to use Kotlin Coroutines for clean asynchronous execution
   - Optimized background permission checks in MainActivity using lifecycleScope, preventing memory leaks
@@ -35,12 +39,6 @@ A simple and efficient auto-slide solution for Android devices, ideal for automa
   - Enabled R8 shrinking and obfuscation, significantly reducing APK package size
   - Delayed Shizuku permission listener registration, optimizing APP cold start rendering speed
   - Integrated GitHub proxy download acceleration (ghfast.top), resolving slow APK updates in China
-- `v2.1`
-  - Optimized swipe gesture coordinate calculation during screen orientation changes
-  - Enhanced Lifecycle management in UpdateChecker to eliminate potential memory leak risks
-  - Added robust crash prevention in FloatingWindowService for multi-window/split-screen environments
-  - Removed unstable reflection calls in Shizuku integration to boost compatibility with newer Android versions
-
 ## Screenshots
 
 ![](assets/screenshot.png)

@@ -1,6 +1,6 @@
 {
-  "versionCode": 14,
-  "versionName": "2.3",
-  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v2.3/AutoSlide-v2.3.apk",
-  "updateLog": "1. 重构更新检测逻辑，全面引入协程 (Kotlin Coroutines) 异步处理\n2. 优化界面权限检查性能，消除潜在的页面内存泄漏隐患\n3. 移除无障碍服务中冗余的窗口内容读取权限 (canRetrieveWindowContent)，提升隐私安全性\n4. 清理冗余的无用资源，修复 Android Lint 报告的所有潜在缺陷"
+  "versionCode": 15,
+  "versionName": "2.4",
+  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v2.4/AutoSlide-v2.4.apk",
+  "updateLog": "1. 修复密码学安全缺陷，将随机数生成器升级为 SecureRandom，提升防作弊检测能力\n2. 优化悬浮窗交互体验，支持在面板任意位置（包括按钮上）直接拖拽移动悬浮窗，解决触控冲突问题\n3. 修复自定义悬浮窗组件在 Android 无障碍环境下的 performClick 规范化警告，提升系统兼容性"
 }
