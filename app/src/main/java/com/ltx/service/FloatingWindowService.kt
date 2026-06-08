@@ -61,6 +61,8 @@ class FloatingWindowService : Service() {
     /* 创建服务根视图并添加到窗口管理器 */
     override fun onCreate() {
         super.onCreate()
+        isServiceRunning = true
+        AutoSlideTileService.requestUpdate(this)
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
         // 创建悬浮窗根视图
         rootView = createRootView()
@@ -79,6 +81,8 @@ class FloatingWindowService : Service() {
                 "Failed to add floating window: overlay permission missing",
                 e
             )
+            isServiceRunning = false
+            AutoSlideTileService.requestUpdate(this)
             stopSelf()
             return
         }
@@ -94,6 +98,8 @@ class FloatingWindowService : Service() {
 
     /* 服务销毁时移除悬浮窗 */
     override fun onDestroy() {
+        isServiceRunning = false
+        AutoSlideTileService.requestUpdate(this)
         serviceScope.cancel()
         super.onDestroy()
         runCatching { windowManager.removeView(rootView) }
@@ -259,5 +265,17 @@ class FloatingWindowService : Service() {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
         startActivity(intent)
+    }
+
+    companion object {
+        private var isServiceRunning = false
+
+        /**
+         * 获取悬浮窗服务运行状态
+         * 
+         * @return 悬浮窗服务是否正在运行
+         */
+        @JvmStatic
+        fun isRunning(): Boolean = isServiceRunning
     }
 }

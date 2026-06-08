@@ -57,4 +57,6 @@
     <string name="install_permission_required">需要开启安装未知应用权限</string>
     <string name="overlay_permission_enabled">悬浮窗权限已开启</string>
     <string name="overlay_permission_disabled">悬浮窗权限已关闭</string>
+    <string name="tile_label">自动滑动</string>
+    <string name="tile_permission_toast">请先授予无障碍和悬浮窗权限</string>
 </resources>

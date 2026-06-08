@@ -1,6 +1,6 @@
 {
-  "versionCode": 15,
-  "versionName": "2.4",
-  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v2.4/AutoSlide-v2.4.apk",
-  "updateLog": "1. 修复密码学安全缺陷，将随机数生成器升级为 SecureRandom，提升防作弊检测能力\n2. 优化悬浮窗交互体验，支持在面板任意位置（包括按钮上）直接拖拽移动悬浮窗，解决触控冲突问题\n3. 修复自定义悬浮窗组件在 Android 无障碍环境下的 performClick 规范化警告，提升系统兼容性"
+  "versionCode": 16,
+  "versionName": "2.5",
+  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v2.5/AutoSlide-v2.5.apk",
+  "updateLog": "1. 新增系统下拉通知栏快捷磁贴（Quick Settings Tile），一键启停悬浮窗服务\n2. 磁贴状态与悬浮窗生命周期实时双向同步，确保 UI 状态一致\n3. 完美适配 Android 14+ 安全规范，采用 PendingIntent 唤起主界面，规避闪退崩溃"
 }

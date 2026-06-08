@@ -1,7 +1,7 @@
 # 安卓自动滑动器APP [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-2.4-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
+[![Version](https://img.shields.io/badge/Version-2.5-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/total)](https://github.com/tianxing-ovo/AutoSlide/releases)
 [![Latest Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/latest/total)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 
@@ -16,6 +16,7 @@
 - **滑动速度**：支持多种滑动速度设置，并基于更平滑的速度曲线调整手势时长
 - **滑动方向**：支持上、下、左、右四个方向的滑动
 - **悬浮窗控制**：便捷的悬浮球控制，滑动开始后自动收缩为小图标，点击小图标即可展开面板并自动停止滑动
+- **通知栏快捷磁贴**：新增系统下拉通知栏快捷磁贴（Quick Settings Tile），支持一键快捷开启或关闭悬浮窗服务，状态双向同步
 - **权限管理**：新增悬浮窗权限控制开关，可快速跳转至系统权限设置页面
 - **音量键强停**：滑动运行中按音量键可立即停止滑动并恢复悬浮窗面板
 - **息屏自停**：屏幕关闭时（包括按电源键）自动停止滑动，防止无效滑动浪费资源
@@ -26,6 +27,11 @@
 
 ## 最近更新
 
+- `v2.5`
+  - 新增系统下拉通知栏快捷磁贴（Quick Settings Tile），支持从状态栏一键快捷启动/停止悬浮窗服务
+  - 磁贴状态与悬浮窗服务生命周期（如悬浮球内关闭或服务异常退出）实时双向同步，确保 UI 状态一致
+  - 完美适配 Android 14+ (API 34+) 关于从背景拉起 activity 必须使用 PendingIntent 的安全规范，解决高版本闪退问题，同时保留低版本兼容
+  - 全面清理冗余资源和隐式广播设计，顺利通过 Android Lint 的全部安全和风格审查
 - `v2.4`
   - 优化悬浮窗交互体验，支持在展开状态下面板任意位置（包括按钮上）直接拖拽移动，完美解决触控拦截冲突
   - 修复自定义悬浮窗容器在 Android 无障碍环境下的 performClick 规范化警告，增强系统兼容性与合规性
@@ -35,10 +41,6 @@
   - 优化权限监控与生命周期绑定，彻底消除潜在的页面内存泄漏隐患
   - 移除无障碍服务配置中冗余的窗口内容读取权限，提升隐私合规性
   - 清理项目中全部冗余无用资源，全面通过并修复 Android Lint 的所有审查缺陷
-- `v2.2`
-  - 开启 R8 代码混淆与资源缩减，大幅缩小 APK 体积
-  - 延迟 Shizuku 权限监听注册，优化 APP 冷启动渲染速度
-  - 集成 GitHub 代理下载加速（ghfast.top），解决国内更新包下载缓慢问题
 ## 截图展示
 
 ![](assets/screenshot.png)

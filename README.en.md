@@ -1,7 +1,7 @@
 # Android Auto-Slide App [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-2.4-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
+[![Version](https://img.shields.io/badge/Version-2.5-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/total)](https://github.com/tianxing-ovo/AutoSlide/releases)
 [![Latest Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/latest/total)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 
@@ -16,6 +16,7 @@ A simple and efficient auto-slide solution for Android devices, ideal for automa
 - **Slide Speed**: Multiple speed settings with a smoother speed curve to control gesture duration
 - **Slide Direction**: Supports sliding in four directions - up, down, left, and right
 - **Floating Window Control**: Convenient floating button control; automatically shrinks to a small icon when sliding starts, and expands the panel while stopping when tapped
+- **Quick Settings Tile**: Support adding a quick toggle switch to the notification panel to start/stop the floating window service with one tap, featuring real-time state synchronization
 - **Permission Management**: New floating window permission toggle for quick access to system permission settings
 - **Volume Key Force Stop**: Press volume keys during sliding to immediately stop and restore the floating panel
 - **Screen-Off Auto Stop**: Automatically stops sliding when the screen turns off (including power button press) to prevent unnecessary resource usage
@@ -26,6 +27,11 @@ A simple and efficient auto-slide solution for Android devices, ideal for automa
 
 ## Recent Updates
 
+- `v2.5`
+  - Added Quick Settings Tile support in the system notification panel, enabling one-tap toggling of the floating window service
+  - Real-time two-way sync between tile state and service lifecycle (e.g. closing via overlay or unexpected service kills) to guarantee UI consistency
+  - Fully adapted to Android 14+ (API 34+) security specifications requiring PendingIntent to collapse and launch activities from background services, avoiding crashes while remaining backward-compatible with Android 12-13
+  - Cleaned up redundant implicit broadcast logic and unused resources, passing all Android Lint checks cleanly
 - `v2.4`
   - Optimized floating window interaction, allowing users to drag the expanded panel from any position (including on top of buttons) without accidental clicks
   - Resolved accessibility compliance warnings by overriding `performClick()` in the custom layout container
@@ -35,10 +41,6 @@ A simple and efficient auto-slide solution for Android devices, ideal for automa
   - Optimized background permission checks in MainActivity using lifecycleScope, preventing memory leaks
   - Removed redundant `canRetrieveWindowContent` accessibility permission to improve user privacy
   - Cleaned up unused resources and resolved all Android Lint warnings for a cleaner codebase
-- `v2.2`
-  - Enabled R8 shrinking and obfuscation, significantly reducing APK package size
-  - Delayed Shizuku permission listener registration, optimizing APP cold start rendering speed
-  - Integrated GitHub proxy download acceleration (ghfast.top), resolving slow APK updates in China
 ## Screenshots
 
 ![](assets/screenshot.png)

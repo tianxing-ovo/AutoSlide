@@ -49,6 +49,17 @@
             android:name=".service.FloatingWindowService"
             android:enabled="true"
             android:exported="false" />
+        <!-- 快捷磁贴开关服务 -->
+        <service
+            android:name=".service.AutoSlideTileService"
+            android:label="@string/tile_label"
+            android:icon="@drawable/ic_slide_tile"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
         <!--用于与Shizuku服务建立通信-->
         <provider
             android:name="rikka.shizuku.ShizukuProvider"
