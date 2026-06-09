@@ -23,14 +23,15 @@ import com.ltx.DIRECTION_RIGHT
 import com.ltx.DIRECTION_UP
 import com.ltx.KEY_MAX_PAUSE_TIME
 import com.ltx.KEY_MIN_PAUSE_TIME
+import com.ltx.KEY_PAUSE_MODE
 import com.ltx.KEY_PAUSE_TIME
 import com.ltx.KEY_SPEED
 import com.ltx.MainActivity
 import com.ltx.PREFS_NAME
+import com.ltx.PAUSE_MODE_NONE
 import com.ltx.R
 import com.ltx.SlideEvent
 import com.ltx.SlideEventHub
-import com.ltx.getPauseMode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -252,7 +253,7 @@ class FloatingWindowService : Service() {
         val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         AutoSlideService.getInstance()?.startSlideWithConfig(
             speedVal = prefs.getInt(KEY_SPEED, DEFAULT_SPEED),
-            pauseModeVal = prefs.getPauseMode(),
+            pauseModeVal = prefs.getInt(KEY_PAUSE_MODE, PAUSE_MODE_NONE),
             pauseTimeVal = prefs.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME),
             minPauseVal = prefs.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME),
             maxPauseVal = prefs.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME)

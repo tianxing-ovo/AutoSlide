@@ -210,7 +210,7 @@ class MainActivity : AppCompatActivity() {
         // 恢复滑动速度
         val speed = preferences.getInt(KEY_SPEED, DEFAULT_SPEED).coerceIn(1, 100)
         // 恢复停顿模式
-        val pauseMode = preferences.getPauseMode()
+        val pauseMode = preferences.getInt(KEY_PAUSE_MODE, PAUSE_MODE_NONE)
         // 恢复停顿时间
         val pauseTime = preferences.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME).coerceAtLeast(1)
         // 恢复随机停顿时间范围
@@ -293,7 +293,7 @@ class MainActivity : AppCompatActivity() {
             override fun onStartTrackingTouch(slider: Slider) = Unit
             override fun onStopTrackingTouch(slider: Slider) {
                 AutoSlideService.getInstance()?.updatePauseConfig(
-                    preferences.getPauseMode(),
+                    preferences.getInt(KEY_PAUSE_MODE, PAUSE_MODE_NONE),
                     slider.value.toInt(),
                     preferences.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME),
                     preferences.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME)
@@ -308,7 +308,7 @@ class MainActivity : AppCompatActivity() {
                 val min = values[0].toInt()
                 val max = values[1].toInt()
                 AutoSlideService.getInstance()?.updatePauseConfig(
-                    preferences.getPauseMode(), preferences.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME), min, max
+                    preferences.getInt(KEY_PAUSE_MODE, PAUSE_MODE_NONE), preferences.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME), min, max
                 )
             }
         })
@@ -343,7 +343,7 @@ class MainActivity : AppCompatActivity() {
                     binding.pauseTimeValueText.text = value.toString()
                     // 更新停顿配置
                     AutoSlideService.getInstance()?.updatePauseConfig(
-                        preferences.getPauseMode(),
+                        preferences.getInt(KEY_PAUSE_MODE, PAUSE_MODE_NONE),
                         value,
                         preferences.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME),
                         preferences.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME)
@@ -754,28 +754,6 @@ class MainActivity : AppCompatActivity() {
             putExtra(":settings:show_fragment_args", bundle)
         }
         startActivity(intent)
-    }
-
-    /**
-     * 判断当前应用⌈无障碍服务权限⌋是否已启用
-     *
-     * @return ⌈无障碍服务权限⌋是否已启用
-     */
-    private fun isAccessibilityServicePermissionEnabled(): Boolean {
-        val enabled = runCatching {
-            Settings.Secure.getInt(contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED)
-        }.getOrDefault(0)
-        if (enabled != 1) {
-            return false
-        }
-        val services = Settings.Secure.getString(
-            contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-        ) ?: return false
-        // 检查是否包含目标组件
-        val targetComponent = ComponentName(this, AutoSlideService::class.java)
-        return services.split(":").any {
-            ComponentName.unflattenFromString(it.trim()) == targetComponent
-        }
     }
 
     /**

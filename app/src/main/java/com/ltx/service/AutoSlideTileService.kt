@@ -13,6 +13,7 @@ import android.service.quicksettings.TileService
 import android.widget.Toast
 import com.ltx.MainActivity
 import com.ltx.R
+import com.ltx.isAccessibilityServicePermissionEnabled
 
 /**
  * 自动滑动磁贴服务
@@ -77,27 +78,6 @@ class AutoSlideTileService : TileService() {
         }
         // 更新磁贴状态
         updateTileState(!isRunning)
-    }
-
-    /**
-     * 判断当前应用⌈无障碍服务权限⌋是否已启用
-     *
-     * @return ⌈无障碍服务权限⌋是否已启用
-     */
-    private fun isAccessibilityServicePermissionEnabled(): Boolean {
-        val enabled = runCatching {
-            Settings.Secure.getInt(contentResolver, Settings.Secure.ACCESSIBILITY_ENABLED)
-        }.getOrDefault(0)
-        if (enabled != 1) {
-            return false
-        }
-        val services = Settings.Secure.getString(
-            contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
-        ) ?: return false
-        val targetComponent = ComponentName(this, AutoSlideService::class.java)
-        return services.split(":").any {
-            ComponentName.unflattenFromString(it.trim()) == targetComponent
-        }
     }
 
     companion object {
