@@ -1,6 +1,6 @@
 {
-  "versionCode": 16,
-  "versionName": "2.5",
-  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v2.5/AutoSlide-v2.5.apk",
-  "updateLog": "1. 新增系统下拉通知栏快捷磁贴（Quick Settings Tile），一键启停悬浮窗服务\n2. 磁贴状态与悬浮窗生命周期实时双向同步，确保 UI 状态一致\n3. 完美适配 Android 14+ 安全规范，采用 PendingIntent 唤起主界面，规避闪退崩溃"
+  "versionCode": 17,
+  "versionName": "2.5.1",
+  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v2.5.1/AutoSlide-v2.5.1.apk",
+  "updateLog": "1. 优化系统向下兼容性，最低支持版本降至 Android 8.0 (API 26)\n2. 修复低版本系统上由于获取版本号导致运行崩溃的问题\n3. 优化深色模式主题在部分系统版本上的样式表现"
 }

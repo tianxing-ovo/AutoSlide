@@ -1,7 +1,7 @@
 # Android Auto-Slide App [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-2.5-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
+[![Version](https://img.shields.io/badge/Version-2.5.1-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/total?cacheSeconds=86400)](https://github.com/tianxing-ovo/AutoSlide/releases)
 [![Latest Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/latest/total?cacheSeconds=86400)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 
@@ -27,6 +27,10 @@ A simple and efficient auto-slide solution for Android devices, ideal for automa
 
 ## Recent Updates
 
+- `v2.5.1`
+  - Optimized backward compatibility, lowering the minimum supported OS version to Android 8.0 (API 26)
+  - Fixed a potential crash (NoSuchFieldError) on older platforms when retrieving the package version code via `longVersionCode`
+  - Refined style definitions with `tools:targetApi` to resolve lint errors and improve dark mode presentation on certain API levels
 - `v2.5`
   - Added Quick Settings Tile support in the system notification panel, enabling one-tap toggling of the floating window service
   - Real-time two-way sync between tile state and service lifecycle (e.g. closing via overlay or unexpected service kills) to guarantee UI consistency
@@ -36,11 +40,6 @@ A simple and efficient auto-slide solution for Android devices, ideal for automa
   - Optimized floating window interaction, allowing users to drag the expanded panel from any position (including on top of buttons) without accidental clicks
   - Resolved accessibility compliance warnings by overriding `performClick()` in the custom layout container
   - Upgraded the PRNG implementation to `SecureRandom` to pass SonarQube security audit checks (kotlin:S2245)
-- `v2.3`
-  - Refactored update checker to use Kotlin Coroutines for clean asynchronous execution
-  - Optimized background permission checks in MainActivity using lifecycleScope, preventing memory leaks
-  - Removed redundant `canRetrieveWindowContent` accessibility permission to improve user privacy
-  - Cleaned up unused resources and resolved all Android Lint warnings for a cleaner codebase
 ## Screenshots
 
 ![](assets/screenshot.png)
@@ -49,7 +48,7 @@ A simple and efficient auto-slide solution for Android devices, ideal for automa
 
 ### Prerequisites
 
-- Android 12.0 or higher
+- Android 8.0 or higher
 
 ### Installation
 

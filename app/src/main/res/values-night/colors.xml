@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="window_background">#121212</color>
+    <color name="primary">#A5C3FF</color>
+    <color name="on_primary">#002E6A</color>
+    <color name="surface">#1E1E24</color>
+    <color name="text_primary">#E1E1E6</color>
+    <color name="text_secondary">#A1A1A8</color>
+    <color name="switch_track_unchecked">#45464F</color>
+    <color name="floating_btn_bg">#388E3C</color>
+</resources>

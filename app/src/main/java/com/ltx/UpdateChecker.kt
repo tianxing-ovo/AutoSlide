@@ -15,6 +15,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.content.pm.PackageInfoCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -358,6 +359,6 @@ object UpdateChecker {
         } else {
             context.packageManager.getPackageInfo(context.packageName, 0)
         }
-        return packageInfo.longVersionCode
+        return PackageInfoCompat.getLongVersionCode(packageInfo)
     }
 }

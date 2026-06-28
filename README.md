@@ -1,7 +1,7 @@
 # 安卓自动滑动器APP [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-2.5-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
+[![Version](https://img.shields.io/badge/Version-2.5.1-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/total?cacheSeconds=86400)](https://github.com/tianxing-ovo/AutoSlide/releases)
 [![Latest Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/latest/total?cacheSeconds=86400)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 
@@ -27,6 +27,10 @@
 
 ## 最近更新
 
+- `v2.5.1`
+  - 优化系统向下兼容性，最低支持版本降至 Android 8.0 (API 26)
+  - 修复低版本系统上由于获取版本号 (longVersionCode) 导致运行崩溃的问题
+  - 优化深色模式主题在部分系统版本上的样式表现并解决 Lint 审查警告
 - `v2.5`
   - 新增系统下拉通知栏快捷磁贴（Quick Settings Tile），支持从状态栏一键快捷启动/停止悬浮窗服务
   - 磁贴状态与悬浮窗服务生命周期（如悬浮球内关闭或服务异常退出）实时双向同步，确保 UI 状态一致
@@ -36,11 +40,6 @@
   - 优化悬浮窗交互体验，支持在展开状态下面板任意位置（包括按钮上）直接拖拽移动，完美解决触控拦截冲突
   - 修复自定义悬浮窗容器在 Android 无障碍环境下的 performClick 规范化警告，增强系统兼容性与合规性
   - 升级核心随机数生成器为 SecureRandom 安全随机算法，彻底解决 SonarQube 安全审计热点 (kotlin:S2245)
-- `v2.3`
-  - 重构更新检测与界面逻辑，全面迁移至 Kotlin 协程 (Coroutines) 异步处理
-  - 优化权限监控与生命周期绑定，彻底消除潜在的页面内存泄漏隐患
-  - 移除无障碍服务配置中冗余的窗口内容读取权限，提升隐私合规性
-  - 清理项目中全部冗余无用资源，全面通过并修复 Android Lint 的所有审查缺陷
 ## 截图展示
 
 ![](assets/screenshot.png)
@@ -49,7 +48,7 @@
 
 ### 前提条件
 
-- Android 12.0及以上版本
+- Android 8.0及以上版本
 
 ### 安装步骤
 

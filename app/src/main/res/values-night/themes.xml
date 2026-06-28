@@ -1,6 +1,6 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Base.Theme.AutoSlide" parent="Theme.Material3.Dark.NoActionBar">
+    <style name="Base.Theme.AutoSlide" parent="Theme.Material3.Dark.NoActionBar" tools:targetApi="29">
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryDark">@color/primary</item>
         <item name="colorAccent">@color/primary</item>
