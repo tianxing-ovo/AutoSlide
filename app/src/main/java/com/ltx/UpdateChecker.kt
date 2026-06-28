@@ -54,7 +54,7 @@ object UpdateChecker {
         "https://raw.githubusercontent.com/tianxing-ovo/AutoSlide/master/update.json"
 
     // 用于加速下载的GitHub代理前缀
-    private const val GITHUB_PROXY_PREFIX = "https://ghfast.top/"
+    private const val GITHUB_PROXY_PREFIX = "https://ghproxy.net/"
     private const val TAG = "UpdateChecker"
     var ioDispatcher: CoroutineDispatcher = Dispatchers.IO
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
