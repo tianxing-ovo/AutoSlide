@@ -7,5 +7,13 @@
     <color name="text_primary">#E1E1E6</color>
     <color name="text_secondary">#A1A1A8</color>
     <color name="switch_track_unchecked">#45464F</color>
-    <color name="floating_btn_bg">#388E3C</color>
+    <color name="floating_btn_bg">#6B7FD7</color>
+    <color name="floating_btn_active">#A5C3FF</color>
+    <color name="floating_btn_icon">#FFFFFF</color>
+    <color name="floating_btn_active_icon">#121212</color>
+    <color name="floating_btn_settings_bg">#2C2C36</color>
+    <color name="floating_btn_settings_icon">#A5C3FF</color>
+    <color name="floating_btn_close_bg">#3B2020</color>
+    <color name="floating_btn_close_icon">#F2B8B5</color>
+    <color name="floating_panel_bg">#661E1E24</color>
 </resources>

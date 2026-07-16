@@ -6,25 +6,29 @@
     android:layout_height="wrap_content"
     android:background="@android:color/transparent"
     android:orientation="vertical"
-    android:padding="8dp">
+    android:padding="6dp">
 
     <LinearLayout
         android:id="@+id/control_panel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:background="@drawable/floating_panel_bg"
+        android:orientation="vertical"
+        android:padding="4dp">
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/floating_up_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_margin="4dp"
+            android:layout_margin="3dp"
             android:contentDescription="@string/desc_slide_up"
-            android:src="@android:drawable/arrow_up_float"
+            android:src="@drawable/ic_floating_arrow_up"
             app:backgroundTint="@color/floating_btn_bg"
+            app:elevation="6dp"
             app:fabSize="mini"
-            tools:ignore="ImageContrastCheck,ClassNameCheck" />
+            app:tint="@color/floating_btn_icon"
+            tools:ignore="ClassNameCheck" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -36,35 +40,41 @@
                 android:id="@+id/floating_left_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="4dp"
+                android:layout_margin="3dp"
                 android:contentDescription="@string/desc_slide_left"
-                android:src="@android:drawable/ic_media_previous"
+                android:src="@drawable/ic_floating_arrow_left"
                 app:backgroundTint="@color/floating_btn_bg"
+                app:elevation="6dp"
                 app:fabSize="mini"
-                tools:ignore="ImageContrastCheck,ClassNameCheck" />
+                app:tint="@color/floating_btn_icon"
+                tools:ignore="ClassNameCheck" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/floating_setting_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_margin="4dp"
+                android:layout_margin="3dp"
                 android:contentDescription="@string/desc_settings"
-                android:src="@android:drawable/ic_menu_preferences"
-                app:backgroundTint="@color/floating_btn_bg"
+                android:src="@drawable/ic_floating_settings"
+                app:backgroundTint="@color/floating_btn_settings_bg"
+                app:elevation="4dp"
                 app:fabSize="mini"
-                tools:ignore="ImageContrastCheck,ClassNameCheck" />
+                app:tint="@color/floating_btn_settings_icon"
+                tools:ignore="ClassNameCheck" />
 
             <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/floating_right_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="4dp"
+                android:layout_margin="3dp"
                 android:contentDescription="@string/desc_slide_right"
-                android:src="@android:drawable/ic_media_next"
+                android:src="@drawable/ic_floating_arrow_right"
                 app:backgroundTint="@color/floating_btn_bg"
+                app:elevation="6dp"
                 app:fabSize="mini"
-                tools:ignore="ImageContrastCheck,ClassNameCheck" />
+                app:tint="@color/floating_btn_icon"
+                tools:ignore="ClassNameCheck" />
         </LinearLayout>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -72,24 +82,28 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_margin="4dp"
+            android:layout_margin="3dp"
             android:contentDescription="@string/desc_slide_down"
-            android:src="@android:drawable/arrow_down_float"
+            android:src="@drawable/ic_floating_arrow_down"
             app:backgroundTint="@color/floating_btn_bg"
+            app:elevation="6dp"
             app:fabSize="mini"
-            tools:ignore="ImageContrastCheck,ClassNameCheck" />
+            app:tint="@color/floating_btn_icon"
+            tools:ignore="ClassNameCheck" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/floating_close_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_margin="4dp"
+            android:layout_margin="3dp"
             android:contentDescription="@string/desc_close"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
-            app:backgroundTint="@color/floating_btn_bg"
+            android:src="@drawable/ic_floating_close"
+            app:backgroundTint="@color/floating_btn_close_bg"
+            app:elevation="4dp"
             app:fabSize="mini"
-            tools:ignore="ImageContrastCheck,ClassNameCheck" />
+            app:tint="@color/floating_btn_close_icon"
+            tools:ignore="ClassNameCheck" />
 
     </LinearLayout>
 
@@ -98,12 +112,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:layout_margin="4dp"
+        android:layout_margin="3dp"
         android:contentDescription="@string/desc_expand"
-        android:src="@android:drawable/ic_input_add"
+        android:src="@drawable/ic_floating_expand"
         android:visibility="gone"
         app:backgroundTint="@color/floating_btn_bg"
+        app:elevation="6dp"
         app:fabSize="mini"
-        tools:ignore="ImageContrastCheck" />
+        app:tint="@color/floating_btn_icon"
+        tools:ignore="ClassNameCheck" />
 
 </com.ltx.service.DraggableLinearLayout>

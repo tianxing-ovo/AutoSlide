@@ -27,3 +27,23 @@ const val DIRECTION_UP = "up"
 const val DIRECTION_DOWN = "down"
 const val DIRECTION_LEFT = "left"
 const val DIRECTION_RIGHT = "right"
+
+// 自定义轨迹
+const val KEY_CUSTOM_TRAJECTORY_UP = "customTrajectory_up"
+const val KEY_CUSTOM_TRAJECTORY_DOWN = "customTrajectory_down"
+const val KEY_CUSTOM_TRAJECTORY_LEFT = "customTrajectory_left"
+const val KEY_CUSTOM_TRAJECTORY_RIGHT = "customTrajectory_right"
+
+/**
+ * 获取轨迹存储键名
+ *
+ * @param direction 方向字符串
+ * @return 轨迹存储键名
+ */
+fun getTrajectoryKey(direction: String): String? = when (direction) {
+    DIRECTION_UP -> KEY_CUSTOM_TRAJECTORY_UP
+    DIRECTION_DOWN -> KEY_CUSTOM_TRAJECTORY_DOWN
+    DIRECTION_LEFT -> KEY_CUSTOM_TRAJECTORY_LEFT
+    DIRECTION_RIGHT -> KEY_CUSTOM_TRAJECTORY_RIGHT
+    else -> null
+}

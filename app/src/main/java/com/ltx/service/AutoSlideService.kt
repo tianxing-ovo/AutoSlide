@@ -9,11 +9,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.Path
+import android.graphics.PointF
 import android.os.Handler
 import android.os.Looper
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
 import com.ltx.DEFAULT_MAX_PAUSE_TIME
 import com.ltx.DEFAULT_MIN_PAUSE_TIME
 import com.ltx.DEFAULT_PAUSE_TIME
@@ -30,11 +32,13 @@ import com.ltx.KEY_SPEED
 import com.ltx.PAUSE_MODE_FIXED
 import com.ltx.PAUSE_MODE_NONE
 import com.ltx.PAUSE_MODE_RANDOM
+import com.ltx.PREFS_NAME
 import com.ltx.SlideEvent
 import com.ltx.SlideEventHub
+import com.ltx.getTrajectoryKey
 import java.lang.ref.WeakReference
-import kotlin.math.ln
 import java.security.SecureRandom
+import kotlin.math.ln
 import kotlin.math.roundToLong
 import kotlin.random.asKotlinRandom
 
@@ -108,6 +112,43 @@ class AutoSlideService : AccessibilityService() {
         currentDirection = when (direction) {
             DIRECTION_UP, DIRECTION_DOWN, DIRECTION_LEFT, DIRECTION_RIGHT -> direction
             else -> DIRECTION_LEFT
+        }
+    }
+
+    /**
+     * 读取自定义轨迹字符串
+     *
+     * @param direction 方向字符串
+     * @return 自定义轨迹字符串
+     */
+    private fun getCustomTrajectory(direction: String): String? {
+        val key = getTrajectoryKey(direction) ?: return null
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        val value = prefs.getString(key, null)
+        return if (value.isNullOrBlank()) null else value
+    }
+
+    /**
+     * 清除自定义轨迹
+     *
+     * @param direction 方向字符串
+     */
+    private fun clearCustomTrajectory(direction: String) {
+        val key = getTrajectoryKey(direction) ?: return
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit {
+            remove(key)
+        }
+        SlideEventHub.sendEvent(SlideEvent.CustomTrajectoryCleared)
+    }
+
+    /**
+     * 安排下一次滑动
+     *
+     * @param currentGen 当前运行代数
+     */
+    private fun scheduleNextSlide(currentGen: Int = runGeneration) {
+        if (isRunning && currentGen == runGeneration) {
+            handler.postDelayed(slideRunnable, calculatePauseDelayMillis())
         }
     }
 
@@ -317,8 +358,71 @@ class AutoSlideService : AccessibilityService() {
      * @param durationMillis 手势持续时间(毫秒)
      */
     private fun performSlideByDirection(durationMillis: Long) {
-        val (startX, startY, endX, endY) = getSlideCoordinates(currentDirection)
-        dispatchLineGesture(startX, startY, endX, endY, durationMillis)
+        // 读取自定义轨迹字符串
+        val trajectoryStr = getCustomTrajectory(currentDirection)
+        if (trajectoryStr != null) {
+            // 分发自定义轨迹
+            dispatchCustomGesture(trajectoryStr, durationMillis)
+        } else {
+            // 分发默认轨迹
+            val (startX, startY, endX, endY) = getSlideCoordinates(currentDirection)
+            dispatchLineGesture(startX, startY, endX, endY, durationMillis)
+        }
+    }
+
+    /**
+     * 分发自定义轨迹
+     *
+     * @param trajectoryStr 轨迹字符串
+     * @param durationMillis 手势持续时间(毫秒)
+     */
+    private fun dispatchCustomGesture(trajectoryStr: String, durationMillis: Long) {
+        // 按分号拆分轨迹字符串并去掉空项
+        val pointsStr = trajectoryStr.split(";").filter { it.isNotBlank() }
+        // 不足两个点视为无效数据清除后跳过本次滑动
+        if (pointsStr.size < 2) {
+            clearCustomTrajectory(currentDirection)
+            scheduleNextSlide()
+            return
+        }
+        // 解析轨迹点
+        val parsedPoints = pointsStr.mapNotNull { pointStr ->
+            val xyValues = pointStr.split(",")
+            if (xyValues.size == 2) {
+                val x = xyValues[0].toFloatOrNull() ?: return@mapNotNull null
+                val y = xyValues[1].toFloatOrNull() ?: return@mapNotNull null
+                PointF(x, y)
+            } else null
+        }
+        // 解析后有效点不足两个视为无效数据清除后跳过本次滑动
+        if (parsedPoints.size < 2) {
+            clearCustomTrajectory(currentDirection)
+            scheduleNextSlide()
+            return
+        }
+        // 根据轨迹点构建手势路径
+        val path = Path()
+        val width = resources.displayMetrics.widthPixels
+        val height = resources.displayMetrics.heightPixels
+        val density = resources.displayMetrics.density
+        val maxOffset = 5f * density
+        // 为每个点添加轻微随机偏移并限制在屏幕范围内
+        parsedPoints.forEachIndexed { index, point ->
+            val xOffset = ((secureRandom.nextDouble() * 2 - 1) * maxOffset).toFloat()
+            val yOffset = ((secureRandom.nextDouble() * 2 - 1) * maxOffset).toFloat()
+            val finalX = (point.x + xOffset).coerceIn(0f, width.toFloat())
+            val finalY = (point.y + yOffset).coerceIn(0f, height.toFloat())
+            if (index == 0) {
+                path.moveTo(finalX, finalY)
+            } else {
+                path.lineTo(finalX, finalY)
+            }
+        }
+        // 构建自定义轨迹手势
+        val gesture = GestureDescription.Builder().addStroke(
+            GestureDescription.StrokeDescription(path, 0, durationMillis)
+        ).build()
+        dispatchGestureAndContinue(gesture)
     }
 
     /**
@@ -391,20 +495,31 @@ class AutoSlideService : AccessibilityService() {
         val gesture = GestureDescription.Builder().addStroke(
             GestureDescription.StrokeDescription(path, 0, durationMillis)
         ).build()
-        // 设置手势活动状态并分发手势
+        dispatchGestureAndContinue(gesture)
+    }
+
+    /**
+     * 分发手势并在结束后安排下一次滑动
+     *
+     * @param gesture 待分发的手势
+     */
+    private fun dispatchGestureAndContinue(gesture: GestureDescription) {
         isGestureActive = true
         val currentGen = runGeneration
-        dispatchGesture(gesture, object : GestureResultCallback() {
+        val success = dispatchGesture(gesture, object : GestureResultCallback() {
             override fun onCompleted(gestureDescription: GestureDescription?) {
                 isGestureActive = false
-                if (isRunning && currentGen == runGeneration) {
-                    handler.postDelayed(slideRunnable, calculatePauseDelayMillis())
-                }
+                scheduleNextSlide(currentGen)
             }
 
             override fun onCancelled(gestureDescription: GestureDescription?) {
                 onCompleted(gestureDescription)
             }
         }, handler)
+        // 分发失败时手动复位并继续下一轮滑动
+        if (!success) {
+            isGestureActive = false
+            scheduleNextSlide(currentGen)
+        }
     }
 }

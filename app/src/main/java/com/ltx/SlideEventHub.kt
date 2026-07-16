@@ -22,4 +22,5 @@ object SlideEventHub {
 sealed class SlideEvent {
     /* 强行停止滑动事件 */
     object ForceStop : SlideEvent()
+    object CustomTrajectoryCleared : SlideEvent()
 }

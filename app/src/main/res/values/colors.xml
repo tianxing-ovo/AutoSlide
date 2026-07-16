@@ -8,5 +8,13 @@
     <color name="text_primary">#000000</color>
     <color name="text_secondary">#3C4043</color>
     <color name="switch_track_unchecked">#BCC0CD</color>
-    <color name="floating_btn_bg">#4CAF50</color>
+    <color name="floating_btn_bg">#545995</color>
+    <color name="floating_btn_active">#A5C3FF</color>
+    <color name="floating_btn_icon">#FFFFFF</color>
+    <color name="floating_btn_active_icon">#002E6A</color>
+    <color name="floating_btn_settings_bg">#E8E9F2</color>
+    <color name="floating_btn_settings_icon">#545995</color>
+    <color name="floating_btn_close_bg">#FDECEC</color>
+    <color name="floating_btn_close_icon">#C62828</color>
+    <color name="floating_panel_bg">#99E8E9F5</color>
 </resources>
