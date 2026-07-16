@@ -1,45 +1,29 @@
 # Android Auto-Slide App [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-2.5.1-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
+[![Version](https://img.shields.io/badge/Version-2.5.2-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/total?cacheSeconds=86400)](https://github.com/tianxing-ovo/AutoSlide/releases)
 [![Latest Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/latest/total?cacheSeconds=86400)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 
 [简体中文](README.md) | [English](README.en.md)
 
-A simple and efficient auto-slide solution for Android devices, ideal for automated testing, content browsing, and more.
+An Android auto-slide tool for automated testing and content browsing
 
 ## Features
 
-- **Timed Sliding**: Customize the time interval between slides
-- **Pause Modes**: Supports three pause modes - "No Pause", "Fixed Time", and "Random Time" - and also allows manually entering a custom pause duration; random mode supports setting minimum and maximum pause duration ranges
-- **Slide Speed**: Multiple speed settings with a smoother speed curve to control gesture duration
-- **Slide Direction**: Supports sliding in four directions - up, down, left, and right
-- **Floating Window Control**: Convenient floating button control; automatically shrinks to a small icon when sliding starts, and expands the panel while stopping when tapped
-- **Quick Settings Tile**: Support adding a quick toggle switch to the notification panel to start/stop the floating window service with one tap, featuring real-time state synchronization
-- **Permission Management**: New floating window permission toggle for quick access to system permission settings
-- **Volume Key Force Stop**: Press volume keys during sliding to immediately stop and restore the floating panel
-- **Screen-Off Auto Stop**: Automatically stops sliding when the screen turns off (including power button press) to prevent unnecessary resource usage
-- **Gesture Simulation**: Precisely simulates finger swipe gestures, with coordinates dynamically calculated from screen size
-- **Continuous Slide Optimization**: Adds a tiny built-in gap in No Pause mode to balance continuity and stability
-- **Smart Permission Management**: Supports manual enablement, Shizuku authorization, and ADB authorization, making accessibility service activation more convenient
-- **Easy to Use**: Intuitive user interface for effortless parameter configuration
+- **Pause Modes**: Offers three modes ⌈No Pause / Fixed Time / Random Time⌋
+- **Slide Speed**: Multiple speed levels with a smooth gesture duration curve
+- **Slide Direction**: Supports up down left and right
+- **Custom Trajectory**: Record a path for each direction and replay it during auto slide
+- **Floating Window Control**: Start or stop via the floating ball with auto collapse while running
+- **Quick Settings Tile**: Toggle the floating window service from system quick settings
+- **Safe Stop**: Supports volume key force stop and auto stop on screen off
+- **Permission Management**: Enable accessibility via ⌈Manual / Shizuku / ADB⌋
 
 ## Recent Updates
 
-- `v2.5.1`
-  - Optimized backward compatibility, lowering the minimum supported OS version to Android 8.0 (API 26)
-  - Fixed a potential crash (NoSuchFieldError) on older platforms when retrieving the package version code via `longVersionCode`
-  - Refined style definitions with `tools:targetApi` to resolve lint errors and improve dark mode presentation on certain API levels
-- `v2.5`
-  - Added Quick Settings Tile support in the system notification panel, enabling one-tap toggling of the floating window service
-  - Real-time two-way sync between tile state and service lifecycle (e.g. closing via overlay or unexpected service kills) to guarantee UI consistency
-  - Fully adapted to Android 14+ (API 34+) security specifications requiring PendingIntent to collapse and launch activities from background services, avoiding crashes while remaining backward-compatible with Android 12-13
-  - Cleaned up redundant implicit broadcast logic and unused resources, passing all Android Lint checks cleanly
-- `v2.4`
-  - Optimized floating window interaction, allowing users to drag the expanded panel from any position (including on top of buttons) without accidental clicks
-  - Resolved accessibility compliance warnings by overriding `performClick()` in the custom layout container
-  - Upgraded the PRNG implementation to `SecureRandom` to pass SonarQube security audit checks (kotlin:S2245)
+See [Releases](https://github.com/tianxing-ovo/AutoSlide/releases/latest) for details
+
 ## Screenshots
 
 ![](assets/screenshot.png)
@@ -58,8 +42,8 @@ A simple and efficient auto-slide solution for Android devices, ideal for automa
 
 ## Contributing
 
-We welcome all forms of contributions, including but not limited to bug reports, feature requests, pull requests, and more.
+Issues and pull requests are welcome
 
 ## License
 
-This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the [Apache License 2.0](LICENSE)

@@ -19,9 +19,9 @@ android {
         // 目标设备的SDK版本
         targetSdk = 37
         // 版本号
-        versionCode = 17
+        versionCode = 18
         // 版本名称
-        versionName = "2.5.1"
+        versionName = "2.5.2"
         // 单元测试
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

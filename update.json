@@ -1,6 +1,6 @@
 {
-  "versionCode": 17,
-  "versionName": "2.5.1",
-  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v2.5.1/AutoSlide-v2.5.1.apk",
-  "updateLog": "1. 优化系统向下兼容性，最低支持版本降至 Android 8.0 (API 26)\n2. 修复低版本系统上由于获取版本号导致运行崩溃的问题\n3. 优化深色模式主题在部分系统版本上的样式表现"
+  "versionCode": 18,
+  "versionName": "2.5.2",
+  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v2.5.2/AutoSlide-v2.5.2.apk",
+  "updateLog": "1. 新增四方向自定义滑动轨迹录制与回放\n2. 长按悬浮窗方向键可录制或管理轨迹，有轨迹时方向键高亮提示\n3. 优化悬浮窗视觉样式，图标与主应用配色统一"
 }
