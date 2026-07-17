@@ -1,7 +1,7 @@
 # Android Auto-Slide App [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-2.5.2-green)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
+[![Version](https://img.shields.io/github/v/release/tianxing-ovo/AutoSlide)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/total?cacheSeconds=86400)](https://github.com/tianxing-ovo/AutoSlide/releases)
 [![Latest Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/latest/total?cacheSeconds=86400)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 
@@ -14,15 +14,11 @@ An Android auto-slide tool for automated testing and content browsing
 - **Pause Modes**: Offers three modes ⌈No Pause / Fixed Time / Random Time⌋
 - **Slide Speed**: Multiple speed levels with a smooth gesture duration curve
 - **Slide Direction**: Supports up down left and right
-- **Custom Trajectory**: Record a path for each direction and replay it during auto slide
+- **Custom Trajectory**: Long-press a direction button to record the swipe path for that direction and replay it during auto slide
 - **Floating Window Control**: Start or stop via the floating ball with auto collapse while running
 - **Quick Settings Tile**: Toggle the floating window service from system quick settings
 - **Safe Stop**: Supports volume key force stop and auto stop on screen off
 - **Permission Management**: Enable accessibility via ⌈Manual / Shizuku / ADB⌋
-
-## Recent Updates
-
-See [Releases](https://github.com/tianxing-ovo/AutoSlide/releases/latest) for details
 
 ## Screenshots
 
