@@ -1,7 +1,7 @@
 # Android Auto-Slide App [AutoSlide]
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/github/v/release/tianxing-ovo/AutoSlide)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
+[![Version](https://img.shields.io/github/v/release/tianxing-ovo/AutoSlide?label=Version)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/total?cacheSeconds=86400)](https://github.com/tianxing-ovo/AutoSlide/releases)
 [![Latest Downloads](https://img.shields.io/github/downloads/tianxing-ovo/AutoSlide/latest/total?cacheSeconds=86400)](https://github.com/tianxing-ovo/AutoSlide/releases/latest)
 
