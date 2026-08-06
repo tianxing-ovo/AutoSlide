@@ -377,16 +377,16 @@ class AutoSlideService : AccessibilityService() {
      * @param durationMillis 手势持续时间(毫秒)
      */
     private fun dispatchCustomGesture(trajectoryStr: String, durationMillis: Long) {
-        // 按分号拆分轨迹字符串并去掉空项
+        // 按分号拆分轨迹字符串并过滤空项
         val pointsStr = trajectoryStr.split(";").filter { it.isNotBlank() }
-        // 不足两个点视为无效数据清除后跳过本次滑动
+        // 有效点不足两个时清除轨迹并安排下次滑动
         if (pointsStr.size < 2) {
             clearCustomTrajectory(currentDirection)
             scheduleNextSlide()
             return
         }
-        // 解析轨迹点
-        val parsedPoints = pointsStr.mapNotNull { pointStr ->
+        // 解析坐标数据
+        val rawPoints = pointsStr.mapNotNull { pointStr ->
             val xyValues = pointStr.split(",")
             if (xyValues.size == 2) {
                 val x = xyValues[0].toFloatOrNull() ?: return@mapNotNull null
@@ -394,31 +394,58 @@ class AutoSlideService : AccessibilityService() {
                 PointF(x, y)
             } else null
         }
-        // 解析后有效点不足两个视为无效数据清除后跳过本次滑动
-        if (parsedPoints.size < 2) {
+        // 解析后有效点不足两个时清除轨迹并安排下次滑动
+        if (rawPoints.size < 2) {
             clearCustomTrajectory(currentDirection)
             scheduleNextSlide()
             return
         }
-        // 根据轨迹点构建手势路径
-        val path = Path()
-        val width = resources.displayMetrics.widthPixels
-        val height = resources.displayMetrics.heightPixels
+        // 过滤间距过近的冗余噪点以防止曲线畸变
         val density = resources.displayMetrics.density
-        val maxOffset = 5f * density
-        // 为每个点添加轻微随机偏移并限制在屏幕范围内
-        parsedPoints.forEachIndexed { index, point ->
-            val xOffset = ((secureRandom.nextDouble() * 2 - 1) * maxOffset).toFloat()
-            val yOffset = ((secureRandom.nextDouble() * 2 - 1) * maxOffset).toFloat()
-            val finalX = (point.x + xOffset).coerceIn(0f, width.toFloat())
-            val finalY = (point.y + yOffset).coerceIn(0f, height.toFloat())
-            if (index == 0) {
-                path.moveTo(finalX, finalY)
-            } else {
-                path.lineTo(finalX, finalY)
+        val minDistSq = (3f * density) * (3f * density)
+        val filteredPoints = mutableListOf<PointF>()
+        filteredPoints.add(rawPoints.first())
+        for (i in 1 until rawPoints.size) {
+            val last = filteredPoints.last()
+            val curr = rawPoints[i]
+            val dx = curr.x - last.x
+            val dy = curr.y - last.y
+            if (i == rawPoints.size - 1 || dx * dx + dy * dy >= minDistSq) {
+                filteredPoints.add(curr)
             }
         }
-        // 构建自定义轨迹手势
+        // 过滤后不足两个点时保底保留首尾坐标
+        if (filteredPoints.size < 2) {
+            filteredPoints.clear()
+            filteredPoints.add(rawPoints.first())
+            filteredPoints.add(rawPoints.last())
+        }
+        // 计算整条轨迹统一的拟人化随机平移量
+        val width = resources.displayMetrics.widthPixels
+        val height = resources.displayMetrics.heightPixels
+        val maxGlobalOffset = 3f * density
+        val globalXOffset = ((secureRandom.nextDouble() * 2 - 1) * maxGlobalOffset).toFloat()
+        val globalYOffset = ((secureRandom.nextDouble() * 2 - 1) * maxGlobalOffset).toFloat()
+        // 应用平移量并确保坐标处于屏幕范围内
+        val points = filteredPoints.map { pt ->
+            val finalX = (pt.x + globalXOffset).coerceIn(0f, width.toFloat())
+            val finalY = (pt.y + globalYOffset).coerceIn(0f, height.toFloat())
+            PointF(finalX, finalY)
+        }
+        // 基于中点插值构建二次贝塞尔平滑路径
+        val path = Path()
+        path.moveTo(points[0].x, points[0].y)
+        if (points.size == 2) {
+            path.lineTo(points[1].x, points[1].y)
+        } else {
+            for (i in 1 until points.size - 1) {
+                val midX = (points[i].x + points[i + 1].x) / 2f
+                val midY = (points[i].y + points[i + 1].y) / 2f
+                path.quadTo(points[i].x, points[i].y, midX, midY)
+            }
+            path.lineTo(points.last().x, points.last().y)
+        }
+        // 构建并分发无障碍手势
         val gesture = GestureDescription.Builder().addStroke(
             GestureDescription.StrokeDescription(path, 0, durationMillis)
         ).build()
