@@ -20,30 +20,19 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.ltx.DEFAULT_MAX_PAUSE_TIME
-import com.ltx.DEFAULT_MIN_PAUSE_TIME
-import com.ltx.DEFAULT_PAUSE_TIME
-import com.ltx.DEFAULT_SPEED
 import com.ltx.DIRECTION_DOWN
 import com.ltx.DIRECTION_LEFT
 import com.ltx.DIRECTION_RIGHT
 import com.ltx.DIRECTION_UP
-import com.ltx.KEY_CUSTOM_TRAJECTORY_DOWN
-import com.ltx.KEY_CUSTOM_TRAJECTORY_LEFT
-import com.ltx.KEY_CUSTOM_TRAJECTORY_RIGHT
-import com.ltx.KEY_CUSTOM_TRAJECTORY_UP
-import com.ltx.KEY_MAX_PAUSE_TIME
-import com.ltx.KEY_MIN_PAUSE_TIME
-import com.ltx.KEY_PAUSE_MODE
-import com.ltx.KEY_PAUSE_TIME
-import com.ltx.KEY_SPEED
 import com.ltx.MainActivity
-import com.ltx.PAUSE_MODE_NONE
 import com.ltx.PREFS_NAME
 import com.ltx.R
 import com.ltx.SlideEvent
 import com.ltx.SlideEventHub
+import com.ltx.clearCustomTrajectory
+import com.ltx.getSlideConfig
 import com.ltx.getTrajectoryKey
+import com.ltx.hasCustomTrajectory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -241,7 +230,7 @@ class FloatingWindowService : Service() {
             .setTitle(getTrajectoryManageTitle(direction)).setItems(items) { _, which ->
                 when (items[which]) {
                     getString(R.string.record) -> startRecordingTrajectory(direction)
-                    getString(R.string.reset) -> clearTrajectory(direction)
+                    getString(R.string.reset) -> clearCustomTrajectory(direction)
                 }
             }.setNegativeButton(R.string.cancel, null)
         showSystemAlertDialog(builder)
@@ -314,19 +303,6 @@ class FloatingWindowService : Service() {
         getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit {
             putString(key, sb.toString())
         }
-    }
-
-    /**
-     * 清除轨迹
-     *
-     * @param direction 方向字符串
-     */
-    private fun clearTrajectory(direction: String) {
-        val key = getTrajectoryKey(direction) ?: return
-        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit {
-            remove(key)
-        }
-        updateDirectionButtonIndicators()
     }
 
     /**
@@ -416,22 +392,21 @@ class FloatingWindowService : Service() {
 
     /* 更新方向按钮视觉标记 */
     private fun updateDirectionButtonIndicators() {
-        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         val defaultColor = ContextCompat.getColor(this, R.color.floating_btn_bg)
         val activeColor = ContextCompat.getColor(this, R.color.floating_btn_active)
         val defaultIconColor = ContextCompat.getColor(this, R.color.floating_btn_icon)
         val activeIconColor = ContextCompat.getColor(this, R.color.floating_btn_active_icon)
-        // 方向按钮ID与轨迹存储键的映射
+        // 方向按钮ID与方向的映射
         val buttons = mapOf(
-            R.id.floating_up_button to KEY_CUSTOM_TRAJECTORY_UP,
-            R.id.floating_down_button to KEY_CUSTOM_TRAJECTORY_DOWN,
-            R.id.floating_left_button to KEY_CUSTOM_TRAJECTORY_LEFT,
-            R.id.floating_right_button to KEY_CUSTOM_TRAJECTORY_RIGHT
+            R.id.floating_up_button to DIRECTION_UP,
+            R.id.floating_down_button to DIRECTION_DOWN,
+            R.id.floating_left_button to DIRECTION_LEFT,
+            R.id.floating_right_button to DIRECTION_RIGHT
         )
         // 遍历方向按钮并更新视觉标记
-        buttons.forEach { (viewId, key) ->
+        buttons.forEach { (viewId, direction) ->
             val button = rootView.findViewById<FloatingActionButton>(viewId)
-            val hasTrajectory = prefs.getString(key, null)?.isNotBlank() == true
+            val hasTrajectory = hasCustomTrajectory(direction)
             button?.let {
                 it.backgroundTintList = ColorStateList.valueOf(
                     if (hasTrajectory) activeColor else defaultColor
@@ -459,10 +434,7 @@ class FloatingWindowService : Service() {
         }
         // 方向按钮⌈长按⌋事件绑定
         button.setOnLongClickListener {
-            val hasCustom = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-                .getString(getTrajectoryKey(direction), null)
-                ?.isNotBlank() == true
-            if (hasCustom) {
+            if (hasCustomTrajectory(direction)) {
                 showTrajectoryManageDialog(direction)
             } else {
                 startRecordingTrajectory(direction)
@@ -495,15 +467,7 @@ class FloatingWindowService : Service() {
     /* 启动自动滑动服务 */
     private fun startSlide() {
         minimize()
-        // 从本地配置文件读取当前设置
-        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        AutoSlideService.getInstance()?.startSlideWithConfig(
-            speedVal = prefs.getInt(KEY_SPEED, DEFAULT_SPEED),
-            pauseModeVal = prefs.getInt(KEY_PAUSE_MODE, PAUSE_MODE_NONE),
-            pauseTimeVal = prefs.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME),
-            minPauseVal = prefs.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME),
-            maxPauseVal = prefs.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME)
-        )
+        AutoSlideService.getInstance()?.startSlideWithConfig(getSlideConfig())
     }
 
     /* 返回主界面 */

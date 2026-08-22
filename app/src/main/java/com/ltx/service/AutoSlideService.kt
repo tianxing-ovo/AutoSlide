@@ -15,7 +15,6 @@ import android.os.Looper
 import android.view.KeyEvent
 import android.view.accessibility.AccessibilityEvent
 import androidx.core.content.ContextCompat
-import androidx.core.content.edit
 import com.ltx.DEFAULT_MAX_PAUSE_TIME
 import com.ltx.DEFAULT_MIN_PAUSE_TIME
 import com.ltx.DEFAULT_PAUSE_TIME
@@ -24,18 +23,14 @@ import com.ltx.DIRECTION_DOWN
 import com.ltx.DIRECTION_LEFT
 import com.ltx.DIRECTION_RIGHT
 import com.ltx.DIRECTION_UP
-import com.ltx.KEY_MAX_PAUSE_TIME
-import com.ltx.KEY_MIN_PAUSE_TIME
-import com.ltx.KEY_PAUSE_MODE
-import com.ltx.KEY_PAUSE_TIME
-import com.ltx.KEY_SPEED
 import com.ltx.PAUSE_MODE_FIXED
 import com.ltx.PAUSE_MODE_NONE
 import com.ltx.PAUSE_MODE_RANDOM
-import com.ltx.PREFS_NAME
+import com.ltx.SlideConfig
 import com.ltx.SlideEvent
 import com.ltx.SlideEventHub
-import com.ltx.getTrajectoryKey
+import com.ltx.clearCustomTrajectory
+import com.ltx.getCustomTrajectory
 import java.lang.ref.WeakReference
 import java.security.SecureRandom
 import kotlin.math.ln
@@ -116,32 +111,6 @@ class AutoSlideService : AccessibilityService() {
     }
 
     /**
-     * 读取自定义轨迹字符串
-     *
-     * @param direction 方向字符串
-     * @return 自定义轨迹字符串
-     */
-    private fun getCustomTrajectory(direction: String): String? {
-        val key = getTrajectoryKey(direction) ?: return null
-        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        val value = prefs.getString(key, null)
-        return if (value.isNullOrBlank()) null else value
-    }
-
-    /**
-     * 清除自定义轨迹
-     *
-     * @param direction 方向字符串
-     */
-    private fun clearCustomTrajectory(direction: String) {
-        val key = getTrajectoryKey(direction) ?: return
-        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit {
-            remove(key)
-        }
-        SlideEventHub.sendEvent(SlideEvent.CustomTrajectoryCleared)
-    }
-
-    /**
      * 安排下一次滑动
      *
      * @param currentGen 当前运行代数
@@ -162,18 +131,25 @@ class AutoSlideService : AccessibilityService() {
     }
 
     /**
+     * 应用滑动配置
+     *
+     * @param config 滑动配置数据对象
+     */
+    private fun applyConfig(config: SlideConfig) {
+        speed = config.speed.coerceIn(1, 100)
+        pauseMode = config.pauseMode
+        pauseTime = config.pauseTime.coerceAtLeast(1)
+        minPauseTime = config.minPauseTime.coerceAtLeast(1)
+        maxPauseTime = config.maxPauseTime.coerceAtLeast(1)
+    }
+
+    /**
      * 更新停顿配置参数
      *
-     * @param mode 停顿模式
-     * @param time 固定停顿时间
-     * @param min 随机停顿下限
-     * @param max 随机停顿上限
+     * @param config 滑动配置数据对象
      */
-    fun updatePauseConfig(mode: Int, time: Int, min: Int, max: Int) {
-        pauseMode = mode
-        pauseTime = time.coerceAtLeast(1)
-        minPauseTime = min.coerceAtLeast(1)
-        maxPauseTime = max.coerceAtLeast(1)
+    fun updatePauseConfig(config: SlideConfig) {
+        applyConfig(config)
         if (!isRunning || isGestureActive) {
             return
         }
@@ -182,39 +158,13 @@ class AutoSlideService : AccessibilityService() {
         handler.postDelayed(slideRunnable, calculatePauseDelayMillis())
     }
 
-    /**
-     * 接收外部启动参数并开始自动滑动
-     *
-     * @param intent 启动参数(包含速度与停顿配置)
-     * @param flags 系统启动标记
-     * @param startId 启动请求ID
-     * @return 固定返回START_STICKY
-     */
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        intent?.run {
-            updateConfigFromIntent(this)
-            startAutoSlide()
-        }
-        return START_STICKY
-    }
-
    /**
     * 根据配置启动自动滑动
     *
-    * @param speedVal 速度值
-    * @param pauseModeVal 停顿模式
-    * @param pauseTimeVal 固定停顿时间
-    * @param minPauseVal 随机停顿下限
-    * @param maxPauseVal 随机停顿上限
+    * @param config 滑动配置数据对象
     */
-    fun startSlideWithConfig(
-        speedVal: Int, pauseModeVal: Int, pauseTimeVal: Int, minPauseVal: Int, maxPauseVal: Int
-    ) {
-        speed = speedVal.coerceIn(1, 100)
-        pauseMode = pauseModeVal
-        pauseTime = pauseTimeVal.coerceAtLeast(1)
-        minPauseTime = minPauseVal.coerceAtLeast(1)
-        maxPauseTime = maxPauseVal.coerceAtLeast(1)
+    fun startSlideWithConfig(config: SlideConfig) {
+        applyConfig(config)
         startAutoSlide()
     }
 
@@ -322,19 +272,6 @@ class AutoSlideService : AccessibilityService() {
             DIRECTION_RIGHT -> SlideCoordinates(width * 0.9f, centerY, width * 0.1f, centerY)
             else -> SlideCoordinates(width * 0.1f, centerY, width * 0.9f, centerY)
         }
-    }
-
-    /**
-     * 从Intent中读取运行参数
-     *
-     * @param intent 启动参数
-     */
-    private fun updateConfigFromIntent(intent: Intent) {
-        speed = intent.getIntExtra(KEY_SPEED, DEFAULT_SPEED)
-        pauseMode = intent.getIntExtra(KEY_PAUSE_MODE, PAUSE_MODE_NONE)
-        pauseTime = intent.getIntExtra(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME).coerceAtLeast(1)
-        minPauseTime = intent.getIntExtra(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME).coerceAtLeast(1)
-        maxPauseTime = intent.getIntExtra(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME).coerceAtLeast(1)
     }
 
     /* 启动自动滑动循环 */

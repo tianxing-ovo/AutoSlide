@@ -22,9 +22,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -57,7 +55,6 @@ object UpdateChecker {
     private const val GITHUB_PROXY_PREFIX = "https://ghproxy.net/"
     private const val TAG = "UpdateChecker"
     var ioDispatcher: CoroutineDispatcher = Dispatchers.IO
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var pendingUpdateInfo: UpdateInfo? = null
     private var updateDialog: AlertDialog? = null
     private var currentDownloadId: Long = -1
@@ -89,7 +86,7 @@ object UpdateChecker {
         }
         val activityRef = WeakReference(activity)
         val appContext = activity.applicationContext
-        val lifecycleScope = (activity as? LifecycleOwner)?.lifecycleScope ?: scope
+        val lifecycleScope = (activity as? LifecycleOwner)?.lifecycleScope ?: return
         lifecycleScope.launch {
             fetchUpdateInfo(appContext).onSuccess { updateInfo ->
                 handleUpdateResult(activityRef, updateInfo, showToastOnLatest)

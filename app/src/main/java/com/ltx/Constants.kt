@@ -22,6 +22,15 @@ const val PAUSE_MODE_NONE = 0
 const val PAUSE_MODE_FIXED = 1
 const val PAUSE_MODE_RANDOM = 2
 
+/* 滑动配置数据类 */
+data class SlideConfig(
+    val speed: Int = DEFAULT_SPEED,
+    val pauseMode: Int = PAUSE_MODE_NONE,
+    val pauseTime: Int = DEFAULT_PAUSE_TIME,
+    val minPauseTime: Int = DEFAULT_MIN_PAUSE_TIME,
+    val maxPauseTime: Int = DEFAULT_MAX_PAUSE_TIME
+)
+
 // 滑动方向
 const val DIRECTION_UP = "up"
 const val DIRECTION_DOWN = "down"

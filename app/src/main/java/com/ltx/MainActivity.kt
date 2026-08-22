@@ -197,31 +197,23 @@ class MainActivity : AppCompatActivity() {
 
     /* 恢复上次配置 */
     private fun restoreSettings() {
-        // 恢复滑动速度
-        val speed = preferences.getInt(KEY_SPEED, DEFAULT_SPEED).coerceIn(1, 100)
-        // 恢复停顿模式
-        val pauseMode = preferences.getInt(KEY_PAUSE_MODE, PAUSE_MODE_NONE)
-        // 恢复停顿时间
-        val pauseTime = preferences.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME).coerceAtLeast(1)
-        // 恢复随机停顿时间范围
-        val minPauseTime = preferences.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME).coerceAtLeast(1)
-        val maxPauseTime = preferences.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME).coerceAtLeast(1)
-        binding.speedSlider.value = speed.toFloat()
+        val config = getSlideConfig()
+        binding.speedSlider.value = config.speed.toFloat()
         binding.speedSlider.setCustomThumbDrawable(R.drawable.slider_thumb_circular)
-        when (pauseMode) {
+        when (config.pauseMode) {
             PAUSE_MODE_NONE -> binding.pauseModeToggleGroup.check(R.id.btnNoPause)
             PAUSE_MODE_FIXED -> binding.pauseModeToggleGroup.check(R.id.btnFixedPause)
             PAUSE_MODE_RANDOM -> binding.pauseModeToggleGroup.check(R.id.btnRandomPause)
         }
         // 动态调整固定停顿时间滑块的最大值
-        binding.pauseTimeSlider.valueTo = maxOf(10, pauseTime).toFloat()
-        binding.pauseTimeSlider.value = pauseTime.toFloat()
+        binding.pauseTimeSlider.valueTo = maxOf(10, config.pauseTime).toFloat()
+        binding.pauseTimeSlider.value = config.pauseTime.toFloat()
         // 动态调整随机停顿范围滑块的最大值并排序赋值
-        binding.randomPauseTimeSlider.valueTo = maxOf(10, minPauseTime, maxPauseTime).toFloat()
-        binding.randomPauseTimeSlider.values = listOf(minPauseTime.toFloat(), maxPauseTime.toFloat()).sorted()
+        binding.randomPauseTimeSlider.valueTo = maxOf(10, config.minPauseTime, config.maxPauseTime).toFloat()
+        binding.randomPauseTimeSlider.values = listOf(config.minPauseTime.toFloat(), config.maxPauseTime.toFloat()).sorted()
         binding.pauseTimeSlider.setCustomThumbDrawable(R.drawable.slider_thumb_circular)
         binding.randomPauseTimeSlider.setCustomThumbDrawable(R.drawable.slider_thumb_circular)
-        updatePauseTimeVisibility(pauseMode)
+        updatePauseTimeVisibility(config.pauseMode)
     }
 
     /* 绑定停顿相关控件事件并持久化用户设置 */
@@ -238,12 +230,7 @@ class MainActivity : AppCompatActivity() {
                 updatePauseTimeVisibility(pauseMode)
                 preferences.edit { putInt(KEY_PAUSE_MODE, pauseMode) }
                 // 更新停顿配置
-                AutoSlideService.getInstance()?.updatePauseConfig(
-                    pauseMode,
-                    preferences.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME),
-                    preferences.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME),
-                    preferences.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME)
-                )
+                syncPauseConfigToService()
             }
         }
         // 停顿时间文本绑定点击事件
@@ -282,26 +269,21 @@ class MainActivity : AppCompatActivity() {
         binding.pauseTimeSlider.addOnSliderTouchListener(object : Slider.OnSliderTouchListener {
             override fun onStartTrackingTouch(slider: Slider) = Unit
             override fun onStopTrackingTouch(slider: Slider) {
-                AutoSlideService.getInstance()?.updatePauseConfig(
-                    preferences.getInt(KEY_PAUSE_MODE, PAUSE_MODE_NONE),
-                    slider.value.toInt(),
-                    preferences.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME),
-                    preferences.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME)
-                )
+                syncPauseConfigToService()
             }
         })
         // 绑定随机停顿时长范围滑块触摸松开事件
         binding.randomPauseTimeSlider.addOnSliderTouchListener(object : RangeSlider.OnSliderTouchListener {
             override fun onStartTrackingTouch(slider: RangeSlider) = Unit
             override fun onStopTrackingTouch(slider: RangeSlider) {
-                val values = slider.values
-                val min = values[0].toInt()
-                val max = values[1].toInt()
-                AutoSlideService.getInstance()?.updatePauseConfig(
-                    preferences.getInt(KEY_PAUSE_MODE, PAUSE_MODE_NONE), preferences.getInt(KEY_PAUSE_TIME, DEFAULT_PAUSE_TIME), min, max
-                )
+                syncPauseConfigToService()
             }
         })
+    }
+
+    /* 同步最新停顿配置到自动滑动服务 */
+    private fun syncPauseConfigToService() {
+        AutoSlideService.getInstance()?.updatePauseConfig(getSlideConfig())
     }
 
     /* 显示自定义停顿时间输入对话框 */
@@ -332,12 +314,7 @@ class MainActivity : AppCompatActivity() {
                     binding.pauseTimeSlider.value = value.toFloat()
                     binding.pauseTimeValueText.text = value.toString()
                     // 更新停顿配置
-                    AutoSlideService.getInstance()?.updatePauseConfig(
-                        preferences.getInt(KEY_PAUSE_MODE, PAUSE_MODE_NONE),
-                        value,
-                        preferences.getInt(KEY_MIN_PAUSE_TIME, DEFAULT_MIN_PAUSE_TIME),
-                        preferences.getInt(KEY_MAX_PAUSE_TIME, DEFAULT_MAX_PAUSE_TIME)
-                    )
+                    syncPauseConfigToService()
                 } else {
                     Toast.makeText(this, R.string.invalid_input_number, Toast.LENGTH_SHORT).show()
                 }
@@ -358,9 +335,6 @@ class MainActivity : AppCompatActivity() {
             override fun onStartTrackingTouch(slider: Slider) = Unit
 
             override fun onStopTrackingTouch(slider: Slider) {
-                if (!isAccessibilityServicePermissionEnabled()) {
-                    return
-                }
                 AutoSlideService.getInstance()?.updateSpeed(slider.value.toInt())
             }
         })
@@ -368,12 +342,7 @@ class MainActivity : AppCompatActivity() {
 
     /* 处理⌈无障碍服务权限⌋开关打开动作 */
     private fun onAccessibilityServicePermissionSwitchEnabled() {
-        // 有⌈写入安全设置权限⌋时直接开启⌈无障碍服务权限⌋
-        if (hasWriteSecureSettingsPermission()) {
-            lifecycleScope.launch {
-                changeAccessibilityServicePermissionState(enable = true)
-                Toast.makeText(this@MainActivity, R.string.accessibility_service_enabled, Toast.LENGTH_SHORT).show()
-            }
+        if (tryEnableAccessibilityViaSecureSettings()) {
             return
         }
         // 展示⌈无障碍服务权限⌋选项弹窗
@@ -463,14 +432,7 @@ class MainActivity : AppCompatActivity() {
                 "/system/bin/pm", "grant", packageName, Manifest.permission.WRITE_SECURE_SETTINGS
             ), onSuccess = {
                 binding.accessibilityServicePermissionSwitch.post {
-                    if (hasWriteSecureSettingsPermission()) {
-                        lifecycleScope.launch {
-                            changeAccessibilityServicePermissionState(enable = true)
-                            Toast.makeText(
-                                this@MainActivity, R.string.accessibility_service_enabled, Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    } else {
+                    if (!tryEnableAccessibilityViaSecureSettings()) {
                         Log.e(TAG, "WRITE_SECURE_SETTINGS still missing after Shizuku grant")
                         Toast.makeText(this, R.string.shizuku_auth_failed, Toast.LENGTH_SHORT).show()
                         updateAccessibilitySwitchState(false)
@@ -537,6 +499,25 @@ class MainActivity : AppCompatActivity() {
     /* 检查是否具备⌈写入安全设置⌋权限 */
     private fun hasWriteSecureSettingsPermission() =
         checkCallingOrSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED
+
+    /**
+     * 尝试通过写入安全设置权限直接开启无障碍服务
+     *
+     * @param toastResId 成功时展示的提示文案资源ID
+     * @return 是否拥有权限并已触发开启
+     */
+    private fun tryEnableAccessibilityViaSecureSettings(
+        toastResId: Int = R.string.accessibility_service_enabled
+    ): Boolean {
+        if (!hasWriteSecureSettingsPermission()) {
+            return false
+        }
+        lifecycleScope.launch {
+            changeAccessibilityServicePermissionState(enable = true)
+            Toast.makeText(this@MainActivity, toastResId, Toast.LENGTH_SHORT).show()
+        }
+        return true
+    }
 
 
     /**
@@ -677,13 +658,7 @@ class MainActivity : AppCompatActivity() {
         if (isAccessibilityServicePermissionEnabled()) {
             return true
         }
-        if (hasWriteSecureSettingsPermission()) {
-            lifecycleScope.launch {
-                changeAccessibilityServicePermissionState(enable = true)
-            }
-            Toast.makeText(
-                this, R.string.accessibility_service_auto_enabled, Toast.LENGTH_SHORT
-            ).show()
+        if (tryEnableAccessibilityViaSecureSettings(R.string.accessibility_service_auto_enabled)) {
             return true
         }
         AlertDialog.Builder(this).setTitle(R.string.permission_required)

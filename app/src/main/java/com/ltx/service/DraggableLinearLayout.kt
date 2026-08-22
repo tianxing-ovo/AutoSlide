@@ -69,15 +69,25 @@ class DraggableLinearLayout @JvmOverloads constructor(
                 onDragListener?.onDragDown(ev.rawX, ev.rawY)
             }
             MotionEvent.ACTION_MOVE -> {
-                val deltaX = ev.rawX - initialTouchX
-                val deltaY = ev.rawY - initialTouchY
-                if (abs(deltaX) > touchSlop || abs(deltaY) > touchSlop) {
+                if (isBeyondSlop(ev)) {
                     isDragging = true
                     return true
                 }
             }
         }
         return super.onInterceptTouchEvent(ev)
+    }
+
+    /**
+     * 判断当前移动距离是否超过滑动阈值
+     *
+     * @param ev 触摸事件
+     * @return 是否超过滑动阈值
+     */
+    private fun isBeyondSlop(ev: MotionEvent): Boolean {
+        val deltaX = ev.rawX - initialTouchX
+        val deltaY = ev.rawY - initialTouchY
+        return abs(deltaX) > touchSlop || abs(deltaY) > touchSlop
     }
 
     /**
@@ -106,9 +116,7 @@ class DraggableLinearLayout @JvmOverloads constructor(
                     onDragListener?.onDragMove(ev.rawX, ev.rawY)
                     return true
                 } else {
-                    val deltaX = ev.rawX - initialTouchX
-                    val deltaY = ev.rawY - initialTouchY
-                    if (abs(deltaX) > touchSlop || abs(deltaY) > touchSlop) {
+                    if (isBeyondSlop(ev)) {
                         isDragging = true
                         return true
                     }
