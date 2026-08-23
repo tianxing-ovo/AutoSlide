@@ -268,7 +268,6 @@ class AutoSlideService : AccessibilityService() {
         return when (direction) {
             DIRECTION_UP -> SlideCoordinates(centerX, height * 0.2f, centerX, height * 0.8f)
             DIRECTION_DOWN -> SlideCoordinates(centerX, height * 0.8f, centerX, height * 0.2f)
-            DIRECTION_LEFT -> SlideCoordinates(width * 0.1f, centerY, width * 0.9f, centerY)
             DIRECTION_RIGHT -> SlideCoordinates(width * 0.9f, centerY, width * 0.1f, centerY)
             else -> SlideCoordinates(width * 0.1f, centerY, width * 0.9f, centerY)
         }

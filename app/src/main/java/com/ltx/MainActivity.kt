@@ -359,11 +359,9 @@ class MainActivity : AppCompatActivity() {
                 }
                 // 有⌈写入安全设置权限⌋时直接关闭⌈无障碍服务权限⌋
                 if (hasWriteSecureSettingsPermission()) {
-                    lifecycleScope.launch {
-                        changeAccessibilityServicePermissionState(enable = false)
-                        Toast.makeText(this@MainActivity, R.string.accessibility_service_disabled, Toast.LENGTH_SHORT)
-                            .show()
-                    }
+                    changeAccessibilityServicePermissionState(enable = false)
+                    Toast.makeText(this@MainActivity, R.string.accessibility_service_disabled, Toast.LENGTH_SHORT)
+                        .show()
                     return@withContext
                 }
                 // 打开⌈无障碍⌋设置页
