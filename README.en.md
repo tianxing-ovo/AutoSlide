@@ -15,6 +15,7 @@ An Android auto-slide tool for automated testing and content browsing
 - **Slide Speed**: Multiple speed levels with a smooth gesture duration curve
 - **Slide Direction**: Supports up down left and right
 - **Custom Trajectory**: Long-press a direction button to record the swipe path for that direction and replay it during auto slide
+- **Panel Transparency**: Stepless adjustment and real-time preview of the floating window panel transparency
 - **Floating Window Control**: Start or stop via the floating ball with auto collapse while running
 - **Quick Settings Tile**: Toggle the floating window service from system quick settings
 - **Safe Stop**: Supports volume key force stop and auto stop on screen off
