@@ -23,4 +23,10 @@ sealed class SlideEvent {
     /* 强行停止滑动事件 */
     object ForceStop : SlideEvent()
     object CustomTrajectoryCleared : SlideEvent()
+    /**
+     * 悬浮窗透明度改变事件
+     *
+     * @param transparency 底板透明度数值
+     */
+    data class FloatingTransparencyChanged(val transparency: Int) : SlideEvent()
 }

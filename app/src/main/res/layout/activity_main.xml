@@ -4,34 +4,24 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context=".MainActivity">
-
-    <!--顶部工具栏-->
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="0dp"
-        android:layout_height="48dp"
-        android:layout_marginTop="@dimen/margin_medium"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:titleTextColor="@color/text_primary"
-        android:background="@color/window_background"
-        android:elevation="0dp" />
 
     <!--权限设置卡片-->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/permissionCard"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_margin="@dimen/margin_medium"
+        android:layout_marginStart="@dimen/margin_medium"
+        android:layout_marginEnd="@dimen/margin_medium"
+        android:layout_marginTop="@dimen/margin_medium"
         app:cardBackgroundColor="@color/surface"
         app:cardCornerRadius="20dp"
         app:cardElevation="0dp"
         app:strokeWidth="0dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar">
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -97,7 +87,7 @@
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!--滑动设置卡片-->
+    <!--偏好设置卡片-->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/settingsCard"
         android:layout_width="0dp"
@@ -120,10 +110,138 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/title_slide_settings"
+                android:text="@string/title_preference_settings"
                 android:textColor="@color/text_primary"
                 android:textSize="@dimen/text_size_subtitle"
                 android:textStyle="bold" />
+
+            <!--滑动速度标题及当前数值-->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_small"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/setting_slide_speed"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_size_body" />
+
+                <TextView
+                    android:id="@+id/speedValueText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:textColor="@color/primary"
+                    android:textSize="@dimen/text_size_body"
+                    android:textStyle="bold"
+                    tools:text="50" />
+            </LinearLayout>
+            <!--滑动速度滑动条-->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_small"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/speed_label_slow"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/speedSlider"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:valueFrom="1.0"
+                    android:valueTo="100.0"
+                    android:value="50.0"
+                    android:stepSize="1.0"
+                    app:labelBehavior="gone"
+                    app:tickVisible="false"
+                    app:tickColor="@android:color/transparent"
+                    app:trackHeight="4dp"
+                    app:thumbColor="@color/primary"
+                    app:trackColorActive="@color/primary"
+                    app:trackColorInactive="@color/switch_track_unchecked" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/speed_label_fast"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <!--底板透明度标题及当前数值-->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_small"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/setting_floating_panel_transparency"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_size_body" />
+
+                <TextView
+                    android:id="@+id/transparencyValueText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:textColor="@color/primary"
+                    android:textSize="@dimen/text_size_body"
+                    android:textStyle="bold"
+                    tools:text="40%" />
+            </LinearLayout>
+            <!--悬浮窗底板透明度滑动条-->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_small"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/transparency_label_solid"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/transparencySlider"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:valueFrom="0.0"
+                    android:valueTo="100.0"
+                    android:value="40.0"
+                    android:stepSize="5.0"
+                    app:labelBehavior="gone"
+                    app:tickVisible="false"
+                    app:tickColor="@android:color/transparent"
+                    app:trackHeight="4dp"
+                    app:thumbColor="@color/primary"
+                    app:trackColorActive="@color/primary"
+                    app:trackColorInactive="@color/switch_track_unchecked" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/transparency_label_transparent"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+            </LinearLayout>
 
             <com.google.android.material.button.MaterialButtonToggleGroup
                 android:id="@+id/pauseModeToggleGroup"
@@ -219,6 +337,7 @@
                         android:valueFrom="1.0"
                         android:valueTo="10.0"
                         android:value="1.0"
+                        app:labelBehavior="gone"
                         app:tickVisible="false"
                         app:tickColor="@android:color/transparent"
                         app:trackHeight="4dp"
@@ -235,6 +354,7 @@
                         android:stepSize="1.0"
                         android:valueFrom="1.0"
                         android:valueTo="10.0"
+                        app:labelBehavior="gone"
                         app:tickVisible="false"
                         app:tickColor="@android:color/transparent"
                         app:trackHeight="4dp"
@@ -243,52 +363,6 @@
                         app:trackColorInactive="@color/switch_track_unchecked"
                         android:visibility="gone" />
                 </FrameLayout>
-            </LinearLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/margin_small"
-                android:text="@string/setting_slide_speed"
-                android:textColor="@color/text_secondary"
-                android:textSize="@dimen/text_size_body" />
-            <!--滑动速度滑动条-->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/margin_small"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/speed_label_slow"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="14sp" />
-
-                <com.google.android.material.slider.Slider
-                    android:id="@+id/speedSlider"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:valueFrom="1.0"
-                    android:valueTo="100.0"
-                    android:value="50.0"
-                    android:stepSize="1.0"
-                    app:tickVisible="false"
-                    app:tickColor="@android:color/transparent"
-                    app:trackHeight="4dp"
-                    app:thumbColor="@color/primary"
-                    app:trackColorActive="@color/primary"
-                    app:trackColorInactive="@color/switch_track_unchecked" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/speed_label_fast"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="14sp" />
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
@@ -300,7 +374,7 @@
         android:layout_height="64dp"
         android:layout_marginStart="@dimen/margin_medium"
         android:layout_marginEnd="@dimen/margin_medium"
-        android:layout_marginTop="@dimen/margin_large"
+        android:layout_marginTop="@dimen/margin_medium"
         android:text="@string/start"
         android:textColor="@color/on_primary"
         android:textSize="18sp"

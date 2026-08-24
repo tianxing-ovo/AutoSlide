@@ -154,6 +154,7 @@ class MainActivity : AppCompatActivity() {
         restoreSettings()
         setupPauseControls()
         setupSpeedControl()
+        setupTransparencyControl()
         binding.accessibilityServicePermissionSwitch.setOnCheckedChangeListener(accessibilitySwitchListener)
         binding.overlayPermissionSwitch.setOnCheckedChangeListener(overlaySwitchListener)
         setupStartButton()
@@ -199,7 +200,12 @@ class MainActivity : AppCompatActivity() {
     private fun restoreSettings() {
         val config = getSlideConfig()
         binding.speedSlider.value = config.speed.toFloat()
+        binding.speedValueText.text = config.speed.toString()
         binding.speedSlider.setCustomThumbDrawable(R.drawable.slider_thumb_circular)
+        val transparency = preferences.getInt(KEY_FLOATING_TRANSPARENCY, DEFAULT_FLOATING_TRANSPARENCY)
+        binding.transparencySlider.value = transparency.toFloat()
+        binding.transparencyValueText.text = getString(R.string.transparency_percentage_format, transparency)
+        binding.transparencySlider.setCustomThumbDrawable(R.drawable.slider_thumb_circular)
         when (config.pauseMode) {
             PAUSE_MODE_NONE -> binding.pauseModeToggleGroup.check(R.id.btnNoPause)
             PAUSE_MODE_FIXED -> binding.pauseModeToggleGroup.check(R.id.btnFixedPause)
@@ -241,9 +247,6 @@ class MainActivity : AppCompatActivity() {
             ) return@setOnClickListener
             showCustomPauseTimeDialog()
         }
-        // 设置滑块提示气泡显示为整数
-        binding.pauseTimeSlider.setLabelFormatter { value -> value.toInt().toString() }
-        binding.randomPauseTimeSlider.setLabelFormatter { value -> value.toInt().toString() }
         // 绑定停顿时长滑块事件
         binding.pauseTimeSlider.addOnChangeListener { _, value, fromUser ->
             val progress = value.toInt()
@@ -323,10 +326,9 @@ class MainActivity : AppCompatActivity() {
 
     /* 绑定速度滑块事件 */
     private fun setupSpeedControl() {
-        // 设置滑块提示气泡显示为整数
-        binding.speedSlider.setLabelFormatter { value -> value.toInt().toString() }
         binding.speedSlider.addOnChangeListener { _, value, fromUser ->
             val progress = value.toInt()
+            binding.speedValueText.text = progress.toString()
             if (fromUser) {
                 preferences.edit { putInt(KEY_SPEED, progress) }
             }
@@ -338,6 +340,18 @@ class MainActivity : AppCompatActivity() {
                 AutoSlideService.getInstance()?.updateSpeed(slider.value.toInt())
             }
         })
+    }
+
+    /* 绑定悬浮窗底板透明度滑块事件 */
+    private fun setupTransparencyControl() {
+        binding.transparencySlider.addOnChangeListener { _, value, fromUser ->
+            val progress = value.toInt()
+            binding.transparencyValueText.text = getString(R.string.transparency_percentage_format, progress)
+            if (fromUser) {
+                preferences.edit { putInt(KEY_FLOATING_TRANSPARENCY, progress) }
+                SlideEventHub.sendEvent(SlideEvent.FloatingTransparencyChanged(progress))
+            }
+        }
     }
 
     /* 处理⌈无障碍服务权限⌋开关打开动作 */

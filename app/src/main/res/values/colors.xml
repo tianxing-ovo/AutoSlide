@@ -16,5 +16,5 @@
     <color name="floating_btn_settings_icon">#545995</color>
     <color name="floating_btn_close_bg">#FDECEC</color>
     <color name="floating_btn_close_icon">#C62828</color>
-    <color name="floating_panel_bg">#99E8E9F5</color>
+    <color name="floating_panel_bg">#FFE8E9F5</color>
 </resources>

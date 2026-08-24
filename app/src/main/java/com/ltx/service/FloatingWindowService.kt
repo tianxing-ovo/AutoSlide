@@ -20,10 +20,12 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.ltx.DEFAULT_FLOATING_TRANSPARENCY
 import com.ltx.DIRECTION_DOWN
 import com.ltx.DIRECTION_LEFT
 import com.ltx.DIRECTION_RIGHT
 import com.ltx.DIRECTION_UP
+import com.ltx.KEY_FLOATING_TRANSPARENCY
 import com.ltx.MainActivity
 import com.ltx.PREFS_NAME
 import com.ltx.R
@@ -73,6 +75,7 @@ class FloatingWindowService : Service() {
         controlPanel = rootView.findViewById(R.id.control_panel)
         expandButton = rootView.findViewById(R.id.floating_expand_button)
         layoutParams = createLayoutParams()
+        updatePanelTransparency()
         // 注册拖拽事件处理
         setupDragging()
         setupControlButtons()
@@ -97,6 +100,7 @@ class FloatingWindowService : Service() {
                 when (event) {
                     is SlideEvent.ForceStop -> expand(stopSlide = false)
                     is SlideEvent.CustomTrajectoryCleared -> updateDirectionButtonIndicators()
+                    is SlideEvent.FloatingTransparencyChanged -> updatePanelTransparency(event.transparency)
                 }
             }
         }
@@ -483,6 +487,19 @@ class FloatingWindowService : Service() {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
         startActivity(intent)
+    }
+
+    /**
+     * 更新悬浮窗底板透明度
+     *
+     * @param transparencyValue 透明度百分比数值
+     */
+    private fun updatePanelTransparency(transparencyValue: Int? = null) {
+        val transparency = transparencyValue ?: getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+            .getInt(KEY_FLOATING_TRANSPARENCY, DEFAULT_FLOATING_TRANSPARENCY)
+            .coerceIn(0, 100)
+        val alpha = ((100 - transparency) * 255 / 100).coerceIn(0, 255)
+        controlPanel.background?.mutate()?.alpha = alpha
     }
 
     /**

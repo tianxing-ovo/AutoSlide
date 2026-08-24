@@ -10,12 +10,14 @@ const val KEY_PAUSE_MODE = "pauseMode"
 const val KEY_PAUSE_TIME = "pauseTime"
 const val KEY_MIN_PAUSE_TIME = "minPauseTime"
 const val KEY_MAX_PAUSE_TIME = "maxPauseTime"
+const val KEY_FLOATING_TRANSPARENCY = "floatingTransparency"
 
 // 默认值
 const val DEFAULT_SPEED = 50
 const val DEFAULT_PAUSE_TIME = 1
 const val DEFAULT_MIN_PAUSE_TIME = 1
 const val DEFAULT_MAX_PAUSE_TIME = 3
+const val DEFAULT_FLOATING_TRANSPARENCY = 40
 
 // 停顿模式
 const val PAUSE_MODE_NONE = 0
