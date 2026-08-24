@@ -34,7 +34,7 @@
         <service
             android:name=".service.AutoSlideService"
             android:enabled="true"
-            android:exported="false"
+            android:exported="true"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             tools:ignore="AccessibilityPolicy">
             <intent-filter>

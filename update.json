@@ -1,6 +1,6 @@
 {
-  "versionCode": 19,
-  "versionName": "2.6.0",
-  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v2.6.0/AutoSlide-v2.6.0.apk",
-  "updateLog": "1. 新增悬浮窗底板透明度自定义调节与实时联动\n2. 优化偏好设置排版布局与状态栏安全区适配\n3. 优化滑块数值实时跟随与交互体验"
+  "versionCode": 20,
+  "versionName": "2.6.1",
+  "downloadUrl": "https://github.com/tianxing-ovo/AutoSlide/releases/download/v2.6.1/AutoSlide-v2.6.1.apk",
+  "updateLog": "1. 修复部分机型手动开启无障碍服务失效的问题\n2. 新增悬浮窗底板透明度自定义调节与实时联动\n3. 优化偏好设置排版布局与状态栏安全区适配"
 }

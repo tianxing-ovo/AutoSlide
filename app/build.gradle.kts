@@ -19,9 +19,9 @@ android {
         // 目标设备的SDK版本
         targetSdk = 37
         // 版本号
-        versionCode = 19
+        versionCode = 20
         // 版本名称
-        versionName = "2.6.0"
+        versionName = "2.6.1"
         // 单元测试
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
