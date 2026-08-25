@@ -32,6 +32,8 @@ android {
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
+            // 使用Debug证书签名以便直接安装测试
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     // 自定义APK输出名称
