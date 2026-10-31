@@ -1,7 +1,6 @@
 package com.ltx
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -39,6 +38,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import rikka.shizuku.Shizuku
 import rikka.shizuku.ShizukuRemoteProcess
+import java.util.Locale
 import android.R as AndroidR
 import com.google.android.material.R as MaterialR
 
@@ -200,7 +200,7 @@ class MainActivity : AppCompatActivity() {
     private fun restoreSettings() {
         val config = getSlideConfig()
         binding.speedSlider.value = config.speed.toFloat()
-        binding.speedValueText.text = config.speed.toString()
+        binding.speedValueText.text = String.format(Locale.ROOT, "%d", config.speed)
         binding.speedSlider.setCustomThumbDrawable(R.drawable.slider_thumb_circular)
         val transparency = preferences.getInt(KEY_FLOATING_TRANSPARENCY, DEFAULT_FLOATING_TRANSPARENCY)
         binding.transparencySlider.value = transparency.toFloat()
@@ -223,7 +223,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     /* 绑定停顿相关控件事件并持久化用户设置 */
-    @SuppressLint("SetTextI18n")
     private fun setupPauseControls() {
         binding.pauseModeToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
@@ -250,7 +249,7 @@ class MainActivity : AppCompatActivity() {
         // 绑定停顿时长滑块事件
         binding.pauseTimeSlider.addOnChangeListener { _, value, fromUser ->
             val progress = value.toInt()
-            binding.pauseTimeValueText.text = progress.toString()
+            binding.pauseTimeValueText.text = String.format(Locale.ROOT, "%d", progress)
             if (fromUser) {
                 preferences.edit { putInt(KEY_PAUSE_TIME, progress) }
             }
@@ -290,7 +289,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     /* 显示自定义停顿时间输入对话框 */
-    @SuppressLint("SetTextI18n")
     private fun showCustomPauseTimeDialog() {
         val textInputLayout = TextInputLayout(this).apply {
             boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
@@ -315,7 +313,7 @@ class MainActivity : AppCompatActivity() {
                     preferences.edit { putInt(KEY_PAUSE_TIME, value) }
                     binding.pauseTimeSlider.valueTo = maxOf(10, value).toFloat()
                     binding.pauseTimeSlider.value = value.toFloat()
-                    binding.pauseTimeValueText.text = value.toString()
+                    binding.pauseTimeValueText.text = String.format(Locale.ROOT, "%d", value)
                     // 更新停顿配置
                     syncPauseConfigToService()
                 } else {
@@ -328,7 +326,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupSpeedControl() {
         binding.speedSlider.addOnChangeListener { _, value, fromUser ->
             val progress = value.toInt()
-            binding.speedValueText.text = progress.toString()
+            binding.speedValueText.text = String.format(Locale.ROOT, "%d", progress)
             if (fromUser) {
                 preferences.edit { putInt(KEY_SPEED, progress) }
             }
@@ -721,7 +719,6 @@ class MainActivity : AppCompatActivity() {
      *
      * @param pauseMode 停顿模式
      */
-    @SuppressLint("SetTextI18n")
     private fun updatePauseTimeVisibility(pauseMode: Int) {
         binding.pauseTimeContainer.isVisible = pauseMode != PAUSE_MODE_NONE
         if (pauseMode == PAUSE_MODE_FIXED) {
@@ -731,7 +728,7 @@ class MainActivity : AppCompatActivity() {
             // 启用下划线及点击事件
             binding.pauseTimeValueText.paintFlags = binding.pauseTimeValueText.paintFlags or Paint.UNDERLINE_TEXT_FLAG
             binding.pauseTimeValueText.isClickable = true
-            binding.pauseTimeValueText.text = binding.pauseTimeSlider.value.toInt().toString()
+            binding.pauseTimeValueText.text = String.format(Locale.ROOT, "%d", binding.pauseTimeSlider.value.toInt())
         } else if (pauseMode == PAUSE_MODE_RANDOM) {
             binding.pauseTimeLabel.setText(R.string.random_pause_time_range)
             binding.pauseTimeSlider.isVisible = false
